@@ -46,15 +46,15 @@ module.exports = {
             '37', // Mateus
             '41', // Zalera
             
-            // Dynamis DC - Need to find IDs for these servers
-            'Cuchulainn', // Cuchulainn
-            'Golem', // Golem
-            'Halicarnassus', // Halicarnassus
-            'Kraken', // Kraken
-            'Maduin', // Maduin
-            'Marilith', // Marilith
-            'Rafflesia', // Rafflesia
-            'Seraph', // Seraph
+            // Dynamis DC
+            '408', // Cuchulainn
+            '411', // Golem
+            '406', // Halicarnassus
+            '409', // Kraken
+            '407', // Maduin
+            '404', // Marilith
+            '410', // Rafflesia
+            '405', // Seraph
             
             // Primal DC
             '78', // Behemoth
@@ -78,44 +78,44 @@ module.exports = {
 
         Japanese: [
             // Elemental DC
-            'Aegis', // Aegis
-            'Atomos', // Atomos
-            'Carbuncle', // Carbuncle
-            'Garuda', // Garuda
-            'Gungnir', // Gungnir
-            'Kujata', // Kujata
-            'Tonberry', // Tonberry
-            'Typhon', // Typhon
+            '90', // Aegis
+            '68', // Atomos
+            '45', // Carbuncle
+            '58', // Garuda
+            '94', // Gungnir
+            '49', // Kujata
+            '72', // Tonberry
+            '50', // Typhon
 
             // Gaia DC
-            'Alexander', // Alexander
-            'Bahamut', // Bahamut
-            'Durandal', // Durandal
-            'Fenrir', // Fenrir
-            'Ifrit', // Ifrit
-            'Ridill', // Ridill
-            'Tiamat', // Tiamat
-            'Ultima', // Ultima
+            '43', // Alexander
+            '69', // Bahamut
+            '92', // Durandal
+            '46', // Fenrir
+            '59', // Ifrit
+            '98', // Ridill
+            '76', // Tiamat
+            '51', // Ultima
 
             // Mana DC
-            'Anima', // Anima
-            'Asura', // Asura
-            'Chocobo', // Chocobo
-            'Hades', // Hades
-            'Ixion', // Ixion
-            'Masamune', // Masamune
-            'Pandaemonium', // Pandaemonium
-            'Titan', // Titan
+            '44', // Anima
+            '23', // Asura
+            '70', // Chocobo
+            '47', // Hades
+            '48', // Ixion
+            '96', // Masamune
+            '28', // Pandaemonium
+            '61', // Titan
 
             // Meteor DC
-            'Belias', // Belias
-            'Mandragora', // Mandragora
-            'Ramuh', // Ramuh
-            'Shinryu', // Shinryu
-            'Unicorn', // Unicorn
-            'Valefor', // Valefor
-            'Yojimbo', // Yojimbo
-            'Zeromus' // Zeromus
+            '24', // Belias
+            '82', // Mandragora
+            '60', // Ramuh
+            '29', // Shinryu
+            '30', // Unicorn
+            '52', // Valefor
+            '31', // Yojimbo
+            '32' // Zeromus
         ],
     },
     itemIDs: [40035],
