@@ -1,7 +1,7 @@
 const WebSocket = require('ws');
 const BSON = require('bson');
 const readline = require('readline');
-const { websocketUrl, dataCenters } = require('../config/settings');
+const { websocketUrl, dataCenters } = require('./config/settings.js');
 
 // Initialise BSON encoder/decoder
 const { serialize, deserialize } = BSON;
@@ -22,11 +22,11 @@ r1.question('Select a data center (European, NorthAmerican, Oceanian, Japanese):
     }
 
     console.log(`Selected data center: ${dataCenter}`);
-    console.log(`Servers:', ${servers.join(', ')}`);
+    console.log(`Servers: ${servers.join(', ')}`);
 
     r1.close();
 
-    //Initialise the WebSocket connection
+    // Initialise the WebSocket connection
     const ws = new WebSocket(websocketUrl);
 
     // Handle connection open event
@@ -37,9 +37,10 @@ r1.question('Select a data center (European, NorthAmerican, Oceanian, Japanese):
         const subscriptionMessage = {
             event: 'subscribe',
             channel: 'listings/add',
-            worlds: servers, 
+            worlds: servers,
         };
 
+        console.log('Subscription Message:', subscriptionMessage); // Debugging
         ws.send(serialize(subscriptionMessage));
         console.log(`Subscription request for ${dataCenter} servers sent.`);
     });
@@ -49,7 +50,14 @@ r1.question('Select a data center (European, NorthAmerican, Oceanian, Japanese):
         try {
             // Decode BSON data
             const message = deserialize(data);
-            console.log('Recieved data:', message);
+
+            // Filter incoming data to match selected servers
+            if (!servers.includes(message.world)) {
+                console.log(`Ignoring data from world ID: ${message.world}`); // Debugging
+                return;
+            }
+
+            console.log('Received data:', message);
 
             if (message.listings) {
                 message.listings.forEach((listing, index) => {
