@@ -1,7 +1,7 @@
 const WebSocket = require('ws');
 const BSON = require('bson');
 const readline = require('readline');
-const { websocketUrl, dataCenters } = require('./config/settings.js');
+const { websocketUrl, dataCenters } = require('../config/settings.js');
 
 // Initialise BSON encoder/decoder
 const { serialize, deserialize } = BSON;
