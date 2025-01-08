@@ -1,6 +1,6 @@
 // FFXIV Server(s) to fetch information from
 export const dataCenters = {
-    European: [
+    Europe: [
         // Chaos DC
         80, // Cerberus
         83, // Louisoix
@@ -22,7 +22,7 @@ export const dataCenters = {
         42 // Zodiark
     ],
 
-    NorthAmerican: [
+    "North-America": [
         // Aether DC
         73, // Adamantoise
         79, // Cactuar
@@ -64,7 +64,7 @@ export const dataCenters = {
         77 // Ultros
     ],
 
-    Oceanian: [
+    Oceania: [
         // Materia DC
         22, // Bismarck 
         21, // Ravana
@@ -73,7 +73,7 @@ export const dataCenters = {
         88 // Zurvan
     ],
 
-    Japanese: [
+    Japan: [
         // Elemental DC
         90, // Aegis
         68, // Atomos
@@ -115,7 +115,7 @@ export const dataCenters = {
         32 // Zeromus
     ],
 
-    Chinese: [
+    China: [
         // 陆行鸟 DC
         1167, 
         1081, 
@@ -156,14 +156,14 @@ export const dataCenters = {
         1187,
     ],
 
-    Korean: [
-        // 한국 DC
-        2075, 
-        2076, 
-        2077, 
-        2078, 
-        2080,
-    ]
+    // Korean: [
+    //     한국 DC
+    //     2075, 
+    //     2076, 
+    //     2077, 
+    //     2078, 
+    //     2080,
+    // ] Unsupported for now
 };
 
 // World ID to World Name Mapping
@@ -295,13 +295,13 @@ export const worlds = {
     1187: "雪松原",
 
     // Korean Worlds
-    2075: "카벙클",
-    2076: "초코보",
-    2077: "모그리",
-    2078: "톤베리",
-    2080: "펜리르",
+    // 2075: "카벙클",
+    // 2076: "초코보",
+    // 2077: "모그리",
+    // 2078: "톤베리",
+    // 2080: "펜리르", Unsupported for now
 }; 
 
-export const itemIDs = [
-    44162, // Grade 2 Gemdraught of Strength
-];
+export const itemIDs = {
+    44162: "Grade 2 Gemdraught of Strength", // Grade 2 Gemdraught of Strength
+};

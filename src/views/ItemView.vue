@@ -1,19 +1,25 @@
 <script setup>
-import { ref, onMounted, computed } from 'vue';
+import { ref, onMounted, computed, watch } from 'vue';
 import { useRoute } from 'vue-router';
 import { worlds, itemIDs, dataCenters } from '../components/settings'; // Import settings.js data
 
 // Reactive variables
 const route = useRoute();
 const itemId = ref(parseInt(route.params.itemId)); // Get itemId dynamically from route
-const world = ref('Cerberus'); // Default world
+const itemName = ref(itemIDs[itemId.value]);
 const marketData = ref(null);
 const loading = ref(true);
 const error = ref(null);
 
 // Filtering variables
-const selectedDataCenter = ref(null);
-const selectedWorld = ref(null);
+const selectedDataCenter = ref("Europe");
+const selectedWorld = ref("");
+
+// Watch when slectedDataCenter changed and fetch the items with the new value (reset selectedWorld)
+watch(selectedDataCenter, async (newQuestion, oldQuestion) => {
+  fetchMarketData()
+  selectedWorld.value = ""
+})
 
 // Computed filtered listings
 const filteredListings = computed(() => {
@@ -21,10 +27,10 @@ const filteredListings = computed(() => {
   return marketData.value.listings.filter((listing) => {
     const matchesDataCenter =
       selectedDataCenter.value
-        ? dataCenters[selectedDataCenter.value]?.includes(listing.world)
+        ? dataCenters[selectedDataCenter.value]?.includes(listing.worldID)
         : true;
     const matchesWorld =
-      selectedWorld.value ? listing.world === selectedWorld.value : true;
+      selectedWorld.value ? listing.worldName === selectedWorld.value : true;
     return matchesDataCenter && matchesWorld;
   });
 });
@@ -34,10 +40,10 @@ const filteredHistory = computed(() => {
   return marketData.value.recentHistory.filter((sale) => {
     const matchesDataCenter =
       selectedDataCenter.value
-        ? dataCenters[selectedDataCenter.value]?.includes(sale.world)
+        ? dataCenters[selectedDataCenter.value]?.includes(sale.worldID)
         : true;
     const matchesWorld =
-      selectedWorld.value ? sale.world === selectedWorld.value : true;
+      selectedWorld.value ? sale.worldName === selectedWorld.value : true;
     return matchesDataCenter && matchesWorld;
   });
 });
@@ -45,16 +51,14 @@ const filteredHistory = computed(() => {
 // Fetch data from Universalis API dynamically
 const fetchMarketData = async () => {
   try {
-    const apiUrl = `https://universalis.app/api/v2/${world.value}/${itemId.value}`;
+    //I change this to europe and you get the list of items from all servers aaaaaaaand look how it looks
+    loading.value = true;
+    const apiUrl = `https://universalis.app/api/v2/${selectedDataCenter.value}/${itemId.value}`;
     const response = await fetch(apiUrl);
     if (!response.ok) {
       throw new Error(`Failed to fetch data: ${response.statusText}`);
     }
     marketData.value = await response.json();
-
-    // Debugging: Log world IDs from Universalis data
-    console.log('Listings:', marketData.value.listings.map((l) => l.world));
-    console.log('Recent History:', marketData.value.recentHistory.map((s) => s.world));
   } catch (err) {
     error.value = err.message;
   } finally {
@@ -70,7 +74,7 @@ onMounted(() => {
 
 <template>
   <main>
-    <h1>Item Details (ID: {{ itemId }})</h1>
+    <h1> {{ itemName }} </h1>
     <p v-if="loading">Loading market data...</p>
     <p v-if="error" class="error">{{ error }}</p>
 
@@ -78,7 +82,7 @@ onMounted(() => {
     <div class="filters">
       <label for="dataCenter">Filter by Data Center:</label>
       <select id="dataCenter" v-model="selectedDataCenter">
-        <option value="">All</option>
+        <!-- TODO: add all servers option -->
         <option v-for="(servers, dcName) in dataCenters" :key="dcName" :value="dcName">
           {{ dcName }}
         </option>
@@ -87,11 +91,8 @@ onMounted(() => {
       <label for="world">Filter by World:</label>
       <select id="world" v-model="selectedWorld">
         <option value="">All</option>
-        <option
-          v-for="worldId in dataCenters[selectedDataCenter] || Object.keys(worlds)"
-          :key="worldId"
-          :value="worldId"
-        >
+        <option v-for="worldId in dataCenters[selectedDataCenter] || Object.keys(worlds)" :key="worldId"
+          :value="worlds[worldId]">
           {{ worlds[worldId] }}
         </option>
       </select>
@@ -114,22 +115,11 @@ onMounted(() => {
           </thead>
           <tbody>
             <tr v-for="(listing, index) in filteredListings" :key="index">
-                <td>{{ index + 1 }}</td>
-                <td>{{ worlds[listing.world] || `Server ${listing.world}` }}</td>
-                <td>{{ listing.pricePerUnit }}</td>
-                <td>{{ listing.quantity }}</td>
-                <td>{{ listing.retainerName }}</td>
-            </tr>
-            </tbody>
-
-            <tbody>
-            <tr v-for="(sale, index) in filteredHistory" :key="index">
-                <td>{{ index + 1 }}</td>
-                <td>{{ worlds[sale.world] || `Server ${sale.world}` }}</td>
-                <td>{{ sale.pricePerUnit }}</td>
-                <td>{{ sale.quantity }}</td>
-                <td>{{ sale.buyerName }}</td>
-                <td>{{ new Date(sale.timestamp * 1000).toLocaleString() }}</td>
+              <td>{{ index + 1 }}</td>
+              <td>{{ worlds[listing.worldName] || `Server ${listing.worldName}` }}</td>
+              <td>{{ listing.pricePerUnit }}</td>
+              <td>{{ listing.quantity }}</td>
+              <td>{{ listing.retainerName }}</td>
             </tr>
           </tbody>
         </table>
@@ -152,7 +142,7 @@ onMounted(() => {
           <tbody>
             <tr v-for="(sale, index) in filteredHistory" :key="index">
               <td>{{ index + 1 }}</td>
-              <td>{{ sale.worldName || worlds[sale.world] }}</td>
+              <td>{{ sale.worldName || worlds[sale.worldName] }}</td>
               <td>{{ sale.pricePerUnit }}</td>
               <td>{{ sale.quantity }}</td>
               <td>{{ sale.buyerName }}</td>
@@ -193,7 +183,7 @@ table {
   margin-top: 1rem;
 }
 
-thead th {
+theadth {
   border-bottom: 2px solid #ccc;
   text-align: left;
   padding: 0.5rem;
