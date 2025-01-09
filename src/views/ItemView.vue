@@ -1,80 +1,80 @@
 <script setup>
-import { ref, onMounted, computed, watch } from 'vue';
-import { useRoute } from 'vue-router';
-import { worlds, itemIDs, dataCenters } from '../components/settings'; // Import settings.js data
+  import { ref, onMounted, computed, watch } from 'vue';
+  import { useRoute } from 'vue-router';
+  import { worlds, itemIDs, dataCenters } from '../components/settings'; // Import settings.js data
 
-// Reactive variables
-const route = useRoute();
-const itemId = ref(parseInt(route.params.itemId)); // Get itemId dynamically from route
-const itemName = ref(itemIDs[itemId.value]);
-const marketData = ref(null);
-const loading = ref(true);
-const error = ref(null);
+  // Reactive variables
+  const route = useRoute();
+  const itemId = ref(parseInt(route.params.itemId)); // Get itemId dynamically from route
+  const itemName = ref(itemIDs[itemId.value]);
+  const marketData = ref(null);
+  const loading = ref(true);
+  const error = ref(null);
 
-// Filtering variables
-const selectedDataCenter = ref("Europe");
-const selectedWorld = ref("");
+  // Filtering variables
+  const selectedDataCenter = ref("Europe");
+  const selectedWorld = ref("");
 
-// Watch when slectedDataCenter changed and fetch the items with the new value (reset selectedWorld)
-watch(selectedDataCenter, async (newQuestion, oldQuestion) => {
-  fetchMarketData()
-  selectedWorld.value = ""
-})
+  // Watch when selectedDataCenter changes and fetch the items with the new value (reset selectedWorld)
+  watch(selectedDataCenter, async (newQuestion, oldQuestion) => {
+    fetchMarketData();
+    selectedWorld.value = "";
+  });
 
-// Computed filtered listings
-const filteredListings = computed(() => {
-  if (!marketData.value) return [];
-  return marketData.value.listings.filter((listing) => {
-    const matchesDataCenter =
-      selectedDataCenter.value
+  // Computed filtered listings
+  const filteredListings = computed(() => {
+    if (!marketData.value) return [];
+    return marketData.value.listings.filter((listing) => {
+      const matchesDataCenter = selectedDataCenter.value
         ? dataCenters[selectedDataCenter.value]?.includes(listing.worldID)
         : true;
-    const matchesWorld =
-      selectedWorld.value ? listing.worldName === selectedWorld.value : true;
-    return matchesDataCenter && matchesWorld;
+      const matchesWorld = selectedWorld.value
+        ? listing.worldName === selectedWorld.value
+        : true;
+      return matchesDataCenter && matchesWorld;
+    });
   });
-});
 
-const filteredHistory = computed(() => {
-  if (!marketData.value) return [];
-  return marketData.value.recentHistory.filter((sale) => {
-    const matchesDataCenter =
-      selectedDataCenter.value
+  const filteredHistory = computed(() => {
+    if (!marketData.value) return [];
+    return marketData.value.recentHistory.filter((sale) => {
+      const matchesDataCenter = selectedDataCenter.value
         ? dataCenters[selectedDataCenter.value]?.includes(sale.worldID)
         : true;
-    const matchesWorld =
-      selectedWorld.value ? sale.worldName === selectedWorld.value : true;
-    return matchesDataCenter && matchesWorld;
+      const matchesWorld = selectedWorld.value
+        ? sale.worldName === selectedWorld.value
+        : true;
+      return matchesDataCenter && matchesWorld;
+    });
   });
-});
 
-// Fetch data from Universalis API dynamically
-const fetchMarketData = async () => {
-  try {
-    //I change this to europe and you get the list of items from all servers aaaaaaaand look how it looks
-    loading.value = true;
-    const apiUrl = `https://universalis.app/api/v2/${selectedDataCenter.value}/${itemId.value}`;
-    const response = await fetch(apiUrl);
-    if (!response.ok) {
-      throw new Error(`Failed to fetch data: ${response.statusText}`);
+  // Fetch data from Universalis API dynamically
+  const fetchMarketData = async () => {
+    try {
+      // I change this to Europe and you get the list of items from all servers
+      loading.value = true;
+      const apiUrl = `https://universalis.app/api/v2/${selectedDataCenter.value}/${itemId.value}`;
+      const response = await fetch(apiUrl);
+      if (!response.ok) {
+        throw new Error(`Failed to fetch data: ${response.statusText}`);
+      }
+      marketData.value = await response.json();
+    } catch (err) {
+      error.value = err.message;
+    } finally {
+      loading.value = false;
     }
-    marketData.value = await response.json();
-  } catch (err) {
-    error.value = err.message;
-  } finally {
-    loading.value = false;
-  }
-};
+  };
 
-// Fetch data on component mount
-onMounted(() => {
-  fetchMarketData();
-});
+  // Fetch data on component mount
+  onMounted(() => {
+    fetchMarketData();
+  });
 </script>
 
 <template>
   <main>
-    <h1> {{ itemName }} </h1>
+    <h1>{{ itemName }}</h1>
     <p v-if="loading">Loading market data...</p>
     <p v-if="error" class="error">{{ error }}</p>
 
@@ -83,7 +83,11 @@ onMounted(() => {
       <label for="dataCenter">Filter by Data Center:</label>
       <select id="dataCenter" v-model="selectedDataCenter">
         <!-- TODO: add all servers option -->
-        <option v-for="(servers, dcName) in dataCenters" :key="dcName" :value="dcName">
+        <option
+          v-for="(servers, dcName) in dataCenters"
+          :key="dcName"
+          :value="dcName"
+        >
           {{ dcName }}
         </option>
       </select>
@@ -91,7 +95,9 @@ onMounted(() => {
       <label for="world">Filter by World:</label>
       <select id="world" v-model="selectedWorld">
         <option value="">All</option>
-        <option v-for="worldId in dataCenters[selectedDataCenter] || Object.keys(worlds)" :key="worldId"
+        <option
+          v-for="worldId in dataCenters[selectedDataCenter] || Object.keys(worlds)"
+          :key="worldId"
           :value="worlds[worldId]">
           {{ worlds[worldId] }}
         </option>

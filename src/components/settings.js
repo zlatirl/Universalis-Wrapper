@@ -302,6 +302,7 @@ export const worlds = {
     // 2080: "펜리르", Unsupported for now
 }; 
 
+// FFXIV Item IDs
 export const itemIDs = {
     44162: "Grade 2 Gemdraught of Strength", // Grade 2 Gemdraught of Strength
 };
