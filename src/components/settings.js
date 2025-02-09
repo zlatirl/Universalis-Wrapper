@@ -304,5 +304,9 @@ export const worlds = {
 
 // FFXIV Item IDs
 export const itemIDs = {
-    44162: "Grade 2 Gemdraught of Strength", // Grade 2 Gemdraught of Strength
+    // 44162: "Grade 2 Gemdraught of Strength", // Grade 2 Gemdraught of Strength
+    itemIDs: Array.from({ length: 30000 }, (_, i) => i + 1)
 };
+
+// Site Name
+export const SITE_NAME = "Marketlink";
