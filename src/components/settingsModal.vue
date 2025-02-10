@@ -13,6 +13,30 @@
         servers: worlds || {},
       };
     },
+    computed: {
+      groupedServers() {
+        const regions = {
+          "Chaos - Europe": ["Cerberus", "Louisox", "Moogle", "Omega", "Phantom", "Ragnarok", "Sagittarius", "Spriggan"],
+          "Light - Europe": ["Alpha", "Lich", "Odin", "Phoenix", "Raiden", "Shiva", "Twintania", "Zodiark"],
+          "Aether - North America": ["Adamantoise", "Cactuar", "Faerie", "Gilgamesh", "Jenova", "Midgardsormr", "Sargatanas", "Siren"],
+          "Crystal - North America": ["Balmung", "Brynhildr", "Coeurl", "Diabolos", "Goblin", "Malboro", "Mateus", "Zalera"],
+          "Dynamis - North America": ["Cuchulainn", "Golem", "Halicarnassus", "Kraken", "Maduin", "Marilith", "Rafflesia", "Seraph"],
+          "Primal - North America": ["Behemoth", "Excalibur", "Exodus", "Famfrit", "Hyperion", "Lamia", "Leviathan", "Ultros"],
+          "Materia - Oceania": ["Bismarck", "Ravana", "Sephirot", "Sophia", "Zurvan"],
+          "Elemental - Japan": ["Aegis", "Atomos", "Carbuncle", "Garuda", "Gungnir", "Kujata", "Tonberry", "Typhon"],
+          "Gaia - Japan": ["Alexander", "Bahamut", "Durandal", "Fenrir", "Ifrit", "Ridill", "Tiamat", "Ultima"],
+          "Mana - Japan": ["Anima", "Asura", "Chocobo", "Hades", "Ixion", "Masamune", "Pandaemonium", "Titan"],
+          "Meteor - Japan": ["Belias", "Mandragora", "Ramuh", "Shinryu", "Unicorn", "Valefor", "Yojimbo", "Zeromus"],
+        };
+
+        let grouped = {};
+        for (const [region, serverList] of Object.entries(regions)) {
+          grouped[region] = serverList.filter(server => Object.values(this.servers).includes(server));
+        }
+
+        return grouped;
+      },
+    },
     methods: {
       saveSettings() {
         console.log('Settings saved:', this.settings);
@@ -24,7 +48,7 @@
 
 <template>
   <div class="modal-overlay">
-    <div class="modal">
+    <div class="bruh">
       <header class="modal-header">
         <h2>Settings</h2>
         <button class="close-btn" @click="$emit('close')">X</button>
@@ -34,9 +58,12 @@
           <div class="form-group">
             <label for="server">Please Select a Server:</label>
             <select id="server" v-model="settings.server">
-              <option v-for="(name, id) in servers" :key="id" :value="name">
-                {{ name }}
-              </option>
+              <option value="" disabled>- Please Choose a Server -</option>
+              <optgroup v-for="(group, region) in groupedServers" :key="region" :label="region">#
+                <option v-for="server in group" :key="server" :value="server">
+                  {{ server }}
+                </option>
+              </optgroup>
             </select>
           </div>
         </form>
@@ -61,7 +88,7 @@
   align-items: center;
 }
 
-.modal {
+.bruh {
   background: #fff;
   border-radius: 10px;
   width: 500px;
