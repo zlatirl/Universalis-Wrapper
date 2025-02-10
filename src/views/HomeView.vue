@@ -14,6 +14,57 @@
   // Least Updated Items
   const leastUpdatedItems = ref([]);
 
+  // Recent Items
+  const recentItems = ref([]);
+  let shouldUpdateRecentItems = ref(true);
+
+  // Fetch Recent Items
+  const fetchRecentItems = async (itemIDs) => {
+    try {
+      const itemDetailsPromises = itemIDs.map((id) =>
+        axios.get(`https://xivapi.com/item/${id}`)
+      );
+      const responses = await Promise.all(itemDetailsPromises);
+      return responses.map((response) => ({
+        id: response.data.ID,
+        name: response.data.Name,
+      }));
+    } catch (error) {
+      console.error('Error fetching item names:', error);
+      return [];
+    }
+  };
+
+  const updateRecentItems = async (newData) => {
+    if (!shouldUpdateRecentItems.value) return; // Prevent updates if toggled off
+
+    try {
+      // Fetch item details from XIVAPI
+      const itemNames = await fetchItemNames(newData.map((item) => item.itemId));
+
+      // Map item details to recentItems
+      const updatedRecentItems = newData.map((item, index) => ({
+        id: item.itemId, // Use the itemId from newData
+        name: itemNames[index]?.name || 'Unknown', // Get the name from itemNames
+        server: worlds[item.worldId] || 'Unknown', // Get the name from worlds
+      }));
+
+      // Remove duplicates by ID
+      const uniqueRecentItems = updatedRecentItems.concat(recentItems.value)
+        .reduce((acc, item) => {
+          if (!acc.find((i) => i.id === item.id)) {
+            acc.push(item);
+          }
+          return acc;
+        }, []);
+
+      // Limit the list to the last 6 unique items
+      recentItems.value = uniqueRecentItems.slice(0, 6);
+    } catch (error) {
+      console.error('Error updating recent items:', error);
+    }
+  };
+
   // Filtered Listings
   const filteredListings = computed(() => {
     if (!selectedDataCenter.value && !selectedServer.value) return listings.value;
@@ -56,8 +107,8 @@
 
       leastUpdatedItems.value = itemNames.map((item) => ({
         ...item,
-        updatedAt: "6 months ago", // Replace with actual update timestamp if available
-        server: "Light", // Replace with dynamic server if needed
+        updatedAt: "6 months ago", // Replace with actual update timestamp
+        server: "Light", // Replace with dynamic server
       }));
     } catch (error) {
       console.error('Error fetching least updated items:', error);
@@ -79,6 +130,7 @@
     try {
       // Fetch least updated items when the component mounts
       await fetchLeastUpdatedItems();
+      await fetchRecentItems();
 
       await initializeWebSocket((message) => {
         if (message.listings) {
@@ -89,7 +141,7 @@
             quantity: listing.quantity,
             retainerName: listing.retainerName,
           }));
-          updateListings(newListings);
+          updateRecentItems(newListings);
         }
       });
     } catch (error) {
@@ -104,6 +156,14 @@
       console.error('Error closing WebSocket:', error);
     }
   });
+
+  // Allow manual refreshing of listings
+  const refreshRecentItems = () => {
+    shouldUpdateRecentItems.value = true;
+    setTimeout(() => {
+      shouldUpdateRecentItems.value = false;
+    }, 5000);
+  };
 </script>
 
 <template>
@@ -113,8 +173,8 @@
       <aside class="col-md-3">
         <div class="card h-100">
           <div class="card-body">
-            <h2 class="text-center">Logged-out</h2>
-            <p class="text-center">Lists, Alerts, Market activity, and retainer links will show here when you are logged into the site.</p>
+            <h2 class="text-center">Saved Items</h2>
+            <p class="text-center">Lists, Alerts, Market activity, and retainer links will show here soon.</p>
           </div>
         </div>
       </aside>
@@ -128,14 +188,6 @@
             <p class="card-text">
               {{ SITE_NAME }} is a market board data site powered by Universalis's API, with crowd-sourced information. It aggregates market board information from multiple sources.
             </p>
-          </div>
-        </div>
-
-        <!-- Sign in Card -->
-        <div class="card">
-          <div class="card-body">
-            <h2 class="card-title">Sign in!</h2>
-            <p class="card-text">Create alerts, make lists, add your retainers, and get a personalised home page feed!</p>
           </div>
         </div>
 

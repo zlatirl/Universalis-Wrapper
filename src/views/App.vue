@@ -1,6 +1,19 @@
 <script setup>
+  import { ref } from 'vue';
   import { RouterLink, RouterView } from 'vue-router';
   import { SITE_NAME } from '../components/settings.js';
+  import settingsModal from '../components/settingsModal.vue';
+
+  const showSettings = ref(false);
+  const searchQuery = ref(''); // Define searchQuery
+  
+  const toggleSettings = () => {
+    showSettings.value = !showSettings.value;
+  };
+
+  const handleSearch = () => {
+    console.log('Search Query:', searchQuery.value);
+  };
 </script>
 
 <template>
@@ -20,10 +33,17 @@
         Search
       </button>
     </div>
+    <div class="header-buttons">
+      <button class="btn btn-primary" @click="toggleSettings">Settings</button>
+    </div>
   </header>
 
   <main class="flex-grow-1">
     <RouterView />
+    <settingsModal
+      v-if="showSettings"
+      @close="toggleSettings"
+    />
   </main>
 </template>
 
