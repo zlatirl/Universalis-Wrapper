@@ -11,12 +11,42 @@
   const selectedServer = ref(null);
   const stopUpdating = ref(false); // Stops updating after 15 entries
 
+  // Mapping for city names to their corresponding icons
+  const cityIcons = {
+    "Limsa Lominsa": "https://xivapi.com/i/060000/060881.png",
+    "Gridania": "https://xivapi.com/i/060000/060882.png",
+    "Ul'dah": "https://xivapi.com/i/060000/060883.png",
+    "Ishgard": "https://xivapi.com/i/060000/060884.png",
+    "Kugane": "https://xivapi.com/i/060000/060885.png",
+    "Crystarium": "https://xivapi.com/i/060000/060886.png",
+    "Old Sharlayan": "https://xivapi.com/i/060000/060887.png",
+    "Tuliyollal": "https://xivapi.com/i/060000/060888.png"
+  };
+
   // Least Updated Items
   const leastUpdatedItems = ref([]);
 
   // Recent Items
   const recentItems = ref([]);
   let shouldUpdateRecentItems = ref(true);
+
+  // Reactive variable for tax rates
+  const taxRates = ref([]);
+
+  const fetchMarketTaxRates = async () => {
+    try {
+      const response = await axios.get('https://universalis.app/api/v2/tax-rates?world=zodiark');
+      const data = response.data;
+
+      taxRates.value = Object.keys(data).map(city => ({
+        name: city,
+        rate: data[city],
+        image: cityIcons[city],
+      }));
+    } catch (error) {
+      console.error('Error fetching tax rates:', error);
+    }
+  }
 
   // Fetch Recent Items
   const fetchRecentItems = async (itemIDs) => {
@@ -35,6 +65,7 @@
     }
   };
 
+  // Update Recent Items
   const updateRecentItems = async (newData) => {
     if (!shouldUpdateRecentItems.value) return; // Prevent updates if toggled off
 
@@ -91,6 +122,8 @@
       return responses.map((response) => ({
         id: response.data.ID,
         name: response.data.Name,
+        category: response.data.ItemUICategory?.Name || 'Unknown Category',
+        image: `https://xivapi.com${response.data.Icon}`,
       }));
     } catch (error) {
       console.error('Error fetching item names:', error);
@@ -101,17 +134,31 @@
   // Fetch least recently updated items
   const fetchLeastUpdatedItems = async () => {
     try {
-      const response = await axios.get('https://universalis.app/api/marketable');
-      const marketableItems = response.data.slice(0, 5);
-      const itemNames = await fetchItemNames(marketableItems);
+      const response = await axios.get('https://universalis.app/api/v2/extra/stats/least-recently-updated?world=zodiark&dcName=light&entries=6');
+      const data = response.data;
 
-      leastUpdatedItems.value = itemNames.map((item) => ({
-        ...item,
-        updatedAt: "6 months ago", // Replace with actual update timestamp
-        server: "Light", // Replace with dynamic server
-      }));
+      if (!data.items || data.items.length === 0) {
+        console.error("No least updated items returned.");
+        return [];
+      }
+
+      const itemIDs = data.items.map(item => item.itemID);
+      const itemNames = await fetchItemNames(itemIDs);
+
+      return data.items.map((item) => {
+        const foundItem = itemNames.find(i => i.id === item.itemID);
+        return {
+          id: item.itemID,
+          name: foundItem ? foundItem.name : `Unknown (${item.itemID})`,
+          category: foundItem ? foundItem.category : "Unknown Category",
+          image: foundItem ? foundItem.image : "",
+          updatedAt: new Date(item.lastUploadTime).toLocaleString(),
+          server: item.worldName,
+        };
+      });
     } catch (error) {
       console.error('Error fetching least updated items:', error);
+      return [];
     }
   };
 
@@ -129,7 +176,7 @@
   onMounted(async () => {
     try {
       // Fetch least updated items when the component mounts
-      await fetchLeastUpdatedItems();
+      leastUpdatedItems.value = await fetchLeastUpdatedItems();
       await fetchRecentItems();
 
       await initializeWebSocket((message) => {
@@ -142,6 +189,7 @@
             retainerName: listing.retainerName,
           }));
           updateRecentItems(newListings);
+          fetchMarketTaxRates();
         }
       });
     } catch (error) {
@@ -195,17 +243,14 @@
         <div class="container mt-5">
         <h2 class="text-center mb-4">Least Recently Updated on {{ selectedDataCenter }}</h2>
         <ul class="list-group">
-          <li
-            v-for="item in leastUpdatedItems" 
-            :key="item.itemID" 
-            class="list-group-item d-flex justify-content-between align-items-center"
-          >
+          <li v-for="item in leastUpdatedItems" :key="item.id" class="list-group-item d-flex align-items-center item-container">
+            <img :src="item.image" alt="Item Icon" class="item-image me-3" />
             <div>
               <strong class="text-primary">{{ item.name }}</strong>
               <br />
               <small class="text-muted">{{ item.category }}</small>
             </div>
-            <small class="text-muted">
+            <small class="last-updated">
               Last updated: {{ item.updatedAt }} on {{ item.server }}
             </small>
           </li>
@@ -218,11 +263,7 @@
         <div class="mb-4">
           <h2 class="text-center">Recent Updates</h2>
           <ul class="list-group">
-            <li
-              v-for="item in recentItems"
-              :key="item.id"
-              class="list-group-item d-flex justify-content-between align-items-center"
-            >
+            <li v-for="item in recentItems" :key="item.id" class="list-group-item d-flex justify-content-between align-items-center">
               <div>
                 <strong class="text-primary">{{ item.name }}</strong>
                 <br />
@@ -232,11 +273,15 @@
         </ul>
         </div>
 
-        <div class="mb-4">
-          <h2 class="text-center">Current Market Tax Rates on Zodiark</h2>
-          <div class="d-flex justify-content-around">
-            <span class="badge bg-primary">5%</span>
-            <span class="badge bg-secondary">3%</span>
+        <div class="market-tax-card">
+          <div class="card-body">
+            <h3 class="text-center">Current Market Tax Rates On Zodiark</h3>
+            <div class="tax-icons">
+              <div v-for="tax in taxRates" :key="tax.name" class="tax-item">
+                <img :src="tax.image" :alt="tax.name" class="tax-image" />
+                <span class="tax-percentage">{{ tax.rate }}%</span>
+              </div>
+            </div>
           </div>
         </div>
 
@@ -254,7 +299,41 @@
     min-height: 100vh;
   }
 
-  .card {
-    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+  .market-tax-card {
+    background-color: #fff; /* Match other cards */
+    color: #000; /* Dark text for contrast */
+    padding: 15px;
+    border-radius: 8px;
+    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1); /* Match other cards */
+    text-align: center;
+    max-width: 400px;
+    margin: 0 auto; /* Center it */
+  }
+
+  .tax-icons {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    gap: 12px; /* Space between items */
+    flex-wrap: wrap;
+    margin-top: 10px;
+  }
+
+  .tax-item {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    width: 45px; /* Consistent width */
+  }
+
+  .tax-percentage {
+    margin-top: 5px;
+    font-size: 14px;
+    font-weight: bold;
+  }
+
+  .last-updated {
+    font-size: 12px;
+    margin-left: auto;
   }
 </style>

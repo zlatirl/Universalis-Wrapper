@@ -59,7 +59,7 @@
             <label for="server">Please Select a Server:</label>
             <select id="server" v-model="settings.server">
               <option value="" disabled>- Please Choose a Server -</option>
-              <optgroup v-for="(group, region) in groupedServers" :key="region" :label="region">#
+              <optgroup v-for="(group, region) in groupedServers" :key="region" :label="region">
                 <option v-for="server in group" :key="server" :value="server">
                   {{ server }}
                 </option>

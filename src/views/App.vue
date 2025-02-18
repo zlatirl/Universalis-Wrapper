@@ -48,12 +48,12 @@
 </template>
 
 <style scoped>
-header {
-  background-color: #343a40;
-  padding: 16px;
-  color: white;
-}
-main {
-  margin-top: 20px;
-}
+  header {
+    background-color: #343a40;
+    padding: 16px;
+    color: white;
+  }
+  main {
+    margin-top: 20px;
+  }
 </style>
