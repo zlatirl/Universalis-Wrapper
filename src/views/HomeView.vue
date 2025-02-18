@@ -300,21 +300,21 @@
   }
 
   .market-tax-card {
-    background-color: #fff; /* Match other cards */
-    color: #000; /* Dark text for contrast */
-    padding: 15px;
-    border-radius: 8px;
-    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1); /* Match other cards */
+    background-color: #fff;
+    color: #000;
+    padding: 10px;
+    border-radius: 6px;
+    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
     text-align: center;
-    max-width: 400px;
-    margin: 0 auto; /* Center it */
+    max-width: 280px;
+    margin: 0 auto;
   }
 
   .tax-icons {
     display: flex;
     justify-content: center;
     align-items: center;
-    gap: 12px; /* Space between items */
+    gap: 12px;
     flex-wrap: wrap;
     margin-top: 10px;
   }
@@ -323,7 +323,7 @@
     display: flex;
     flex-direction: column;
     align-items: center;
-    width: 45px; /* Consistent width */
+    width: 45px;
   }
 
   .tax-percentage {
