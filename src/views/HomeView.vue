@@ -1,4 +1,5 @@
 <script setup>
+  // Import modules and components
   import { ref, computed, onMounted, onUnmounted } from 'vue';
   import axios from 'axios';
   import { initializeWebSocket, closeWebSocket } from '../components/websocketService';
