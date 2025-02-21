@@ -10,7 +10,6 @@
   const listings = ref([]);
   const selectedDataCenter = ref("Light"); // Change this based on user selection
   const selectedServer = ref(null);
-  const stopUpdating = ref(false); // Stops updating after 15 entries
 
   // Mapping for city names to their corresponding icons
   const cityIcons = {
@@ -29,11 +28,23 @@
 
   // Recent Items
   const recentItems = ref([]);
-  let shouldUpdateRecentItems = ref(true);
 
   // Reactive variable for tax rates
   const taxRates = ref([]);
 
+  // Util to throttle recent items update
+  const throttle = (func, limit) => {
+    let inThrottle;
+    return function (...args) {
+      if (!inThrottle) {
+        func.apply(this, args);
+        inThrottle = true;
+        setTimeout(() => (inThrottle = false), limit);
+      }
+    };
+  };
+
+  // Grab Tax Rates from API
   const fetchMarketTaxRates = async () => {
     try {
       const response = await axios.get('https://universalis.app/api/v2/tax-rates?world=zodiark');
@@ -49,69 +60,81 @@
     }
   }
 
-  // Fetch Recent Items
-  const fetchRecentItems = async (itemIDs) => {
+  // Grab the most recent items from the API
+  const updateRecentItems = async () => {
     try {
-      const itemDetailsPromises = itemIDs.map((id) =>
-        axios.get(`https://xivapi.com/item/${id}`)
-      );
-      const responses = await Promise.all(itemDetailsPromises);
-      return responses.map((response) => ({
-        id: response.data.ID,
-        name: response.data.Name,
-      }));
-    } catch (error) {
-      console.error('Error fetching item names:', error);
-      return [];
-    }
-  };
+      const response = await axios.get('https://universalis.app/api/v2/extra/stats/recently-updated');
+      const data = response.data;
 
-  // Update Recent Items
-  const updateRecentItems = async (newData) => {
-    if (!shouldUpdateRecentItems.value) return; // Prevent updates if toggled off
+      if (!data.items || data.items.length === 0) {
+        console.warn("No recent updates found.");
+        return;
+      }
 
-    try {
-      // Fetch item details from XIVAPI
-      const itemNames = await fetchItemNames(newData.map((item) => item.itemId));
+      // Extract item IDs
+      const itemIDs = data.items;
 
-      // Map item details to recentItems
-      const updatedRecentItems = newData.map((item, index) => ({
-        id: item.itemId, // Use the itemId from newData
-        name: itemNames[index]?.name || 'Unknown', // Get the name from itemNames
-        server: worlds[item.worldId] || 'Unknown', // Get the name from worlds
-      }));
+      // Fetch item names from XIVAPI
+      const itemNames = await fetchItemsFromXIVAPI(itemIDs);
 
-      // Remove duplicates by ID
-      const uniqueRecentItems = updatedRecentItems.concat(recentItems.value)
-        .reduce((acc, item) => {
-          if (!acc.find((i) => i.id === item.id)) {
-            acc.push(item);
-          }
-          return acc;
-        }, []);
+      // Map and update recentItems
+      recentItems.value = itemIDs.map((id) => {
+        const foundItem = itemNames.find(i => i.row_id === id);
+        return {
+          id,
+          name: foundItem ? foundItem.fields.Name : `Unknown (${id})`,
+          category: foundItem ? foundItem.fields.Category : "Unknown Category",
+          image: foundItem ? foundItem.image : "", // Use the corrected image URL
+          link: `/item/${id}`
+        };
+      }).slice(0, 6);
 
-      // Limit the list to the last 6 unique items
-      recentItems.value = uniqueRecentItems.slice(0, 6);
     } catch (error) {
       console.error('Error updating recent items:', error);
     }
   };
 
-  // Filtered Listings
-  const filteredListings = computed(() => {
-    if (!selectedDataCenter.value && !selectedServer.value) return listings.value;
+  // Throttle the updateRecentItems function to run at most one per minute
+  const throttledUpdateRecentItems = throttle(updateRecentItems, 60000);
 
-    return listings.value.filter((listing) => {
-      const isInDataCenter = selectedDataCenter.value
-        ? dataCenters[selectedDataCenter.value]?.includes(listing.worldId)
-        : true;
-      const isInServer = selectedServer.value
-        ? listing.worldId === selectedServer.value
-        : true;
+  // Fetch item names from XIVAPI using the same logic as in App.vue
+  const fetchItemsFromXIVAPI = async (itemIDs) => {
+    try {
+      const itemPromises = itemIDs.map(id =>
+        axios.get(`https://v2.xivapi.com/api/sheet/Item/${id}?fields=Name,Description,ItemUICategory,Icon`)
+      );
 
-      return isInDataCenter && isInServer;
-    });
-  });
+      // Wait for all requests to complete
+      const responses = await Promise.all(itemPromises);
+
+      // Map the responses to return structured data
+      const items = responses.map(response => {
+        const data = response.data;
+
+        // Ensure Icon exists and construct correct image URL
+        let iconPath = "";
+        if (data.fields?.Icon?.path) {
+          const urlParts = data.fields.Icon.path.split("/"); // Split the icon path into parts
+          iconPath = `https://xivapi.com/i/${urlParts[2]}/${urlParts[3].replace(".tex", ".png")}`; // Convert .tex to .png
+        }
+
+        // Return an object with item details, including name, category, and icon image
+        return {
+          row_id: data.row_id,
+          fields: {
+            Name: data.fields.Name,
+            Category: data.fields.ItemUICategory?.fields?.Name || "Unknown Category",
+          },
+          image: iconPath,
+        };
+      });
+
+      return items;
+    } catch (error) {
+      console.error('Error fetching item names:', error);
+      return [];
+    }
+  };
 
   // Fetch item names dynamically
   const fetchItemNames = async (itemIDs) => {
@@ -135,7 +158,7 @@
   // Fetch least recently updated items
   const fetchLeastUpdatedItems = async () => {
     try {
-      const response = await axios.get('https://universalis.app/api/v2/extra/stats/least-recently-updated?world=zodiark&dcName=light&entries=6');
+      const response = await axios.get('https://universalis.app/api/v2/extra/stats/least-recently-updated?world=twintania&dcName=light&entries=6');
       const data = response.data;
 
       if (!data.items || data.items.length === 0) {
@@ -163,33 +186,15 @@
     }
   };
 
-  // Function to update listings
-  const updateListings = (newData) => {
-    if (!stopUpdating.value) {
-      listings.value = [...newData, ...listings.value].slice(0, 6);
-      if (listings.value.length >= 6) {
-        stopUpdating.value = true;
-      }
-    }
-  };
-
   // WebSocket Setup
   onMounted(async () => {
     try {
       // Fetch least updated items when the component mounts
       leastUpdatedItems.value = await fetchLeastUpdatedItems();
-      await fetchRecentItems();
 
       await initializeWebSocket((message) => {
         if (message.listings) {
-          const newListings = message.listings.map((listing) => ({
-            itemId: message.item,
-            worldId: message.world,
-            pricePerUnit: listing.pricePerUnit,
-            quantity: listing.quantity,
-            retainerName: listing.retainerName,
-          }));
-          updateRecentItems(newListings);
+          throttledUpdateRecentItems();
           fetchMarketTaxRates();
         }
       });
@@ -205,14 +210,6 @@
       console.error('Error closing WebSocket:', error);
     }
   });
-
-  // Allow manual refreshing of listings
-  const refreshRecentItems = () => {
-    shouldUpdateRecentItems.value = true;
-    setTimeout(() => {
-      shouldUpdateRecentItems.value = false;
-    }, 5000);
-  };
 </script>
 
 <template>
@@ -247,7 +244,9 @@
           <li v-for="item in leastUpdatedItems" :key="item.id" class="list-group-item d-flex align-items-center item-container">
             <img :src="item.image" alt="Item Icon" class="item-image me-3" />
             <div>
-              <strong class="text-primary">{{ item.name }}</strong>
+              <a :href="`/item/${item.id}`" class="item-link">
+                <strong class="text-primary">{{ item.name }}</strong>
+              </a>
               <br />
               <small class="text-muted">{{ item.category }}</small>
             </div>
@@ -261,17 +260,19 @@
 
       <!-- Right Sidebar -->
       <aside class="col-md-3 bg-light py-4">
-        <div class="mb-4">
-          <h2 class="text-center">Recent Updates</h2>
+        <div class="recent-updates">
+          <h2>Recent Updates</h2>
           <ul class="list-group">
-            <li v-for="item in recentItems" :key="item.id" class="list-group-item d-flex justify-content-between align-items-center">
-              <div>
-                <strong class="text-primary">{{ item.name }}</strong>
-                <br />
-                <small class="text-muted">Server: {{ item.server }}</small>
-              </div>
-          </li>
-        </ul>
+              <li v-for="item in recentItems" :key="item.id" class="list-group-item">
+                <a :href="`/item/${item.id}`" class="item-image-link">
+                  <img :src="item.image" alt="Item Icon" class="item-image" />
+                </a>
+                  <div class="item-details">
+                      <a :href="`/item/${item.id}`" class="item-name">{{ item.name }}</a>
+                      <small class="item-category">{{ item.category }}</small>
+                  </div>
+              </li>
+          </ul>
         </div>
 
         <div class="market-tax-card">
@@ -300,6 +301,7 @@
     min-height: 100vh;
   }
 
+  /* Market Tax Card Styling */
   .market-tax-card {
     background-color: #fff;
     color: #000;
@@ -308,9 +310,10 @@
     box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
     text-align: center;
     max-width: 450px;
-    margin: 0 auto;
+    margin-top: 10px;
   }
 
+  /* City Image Styles */
   .tax-icons {
     display: flex;
     flex-direction: row;
@@ -335,5 +338,89 @@
   .last-updated {
     font-size: 12px;
     margin-left: auto;
+  }
+
+  .item-link {
+    color: #007bff;
+    text-decoration: none;
+  }
+
+  /* Recent Updates Container */
+  .recent-updates {
+    background-color: #f8f9fa;
+    border-radius: 8px;
+    padding: 10px;
+    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.2);
+  }
+
+  /* Title Styling */
+  .recent-updates h2 {
+    font-size: 18px;
+    font-weight: bold;
+    text-transform: uppercase;
+    text-align: center;
+    padding: 8px;
+    background-color: #e0e0e0;
+    border-radius: 6px 6px 0 0;
+  }
+
+  /* List Group */
+  .recent-updates .list-group {
+    border-radius: 8px;
+    overflow: hidden;
+  }
+
+  /* Individual List Items */
+  .recent-updates .list-group-item {
+    display: flex;
+    align-items: center;
+    background-color: #ffffff;
+    border: none;
+    padding: 10px 12px;
+    border-bottom: 1px solid #d1d1d1;
+    transition: background-color 0.2s ease-in-out;
+  }
+
+  /* Add box shadow to the last item */
+  .recent-updates .list-group-item:last-child {
+    border-radius: 0 0 8px 8px;
+  }
+
+  /* Item Image */
+  .recent-updates .item-image {
+    width: 50px;
+    height: 50px;
+    object-fit: cover;
+    border-radius: 6px;
+    margin-right: 12px;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+  }
+
+  /* Item Details */
+  .recent-updates .item-details {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+  }
+
+  /* Item Name */
+  .recent-updates .item-name {
+    font-size: 16px;
+    font-weight: bold;
+    color: #007bff;
+    transition: color 0.2s ease-in-out;
+    text-decoration: none;
+  }
+
+  /* Item Category */
+  .recent-updates .item-category {
+    font-size: 14px;
+    color: #6c757d;
+  }
+
+  /* Adjustments for compact layout */
+  .recent-updates .list-group-item {
+    padding: 8px;
   }
 </style>

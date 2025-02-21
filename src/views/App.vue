@@ -22,6 +22,8 @@
   const closeSearch = (event) => {
     const searchContainer = document.querySelector(".searchP");
     const searchInput = document.querySelector(".form-control");
+    const categoryDropdown = document.querySelector(".category-dropdown");
+    const categoryButton = document.querySelector(".btn-secondary");
     
     // If the click is NOT inside the search results or search input, hide the dropdown
     if (
@@ -30,6 +32,14 @@
     ) {
       show.value = false;
       activeCategory.value = '';
+    }
+    
+    // If clicking outside categories, hide category dropdown
+    if (
+      categoryDropdown && !categoryDropdown.contains(event.target) &&
+      categoryButton && !categoryButton.contains(event.target)
+    ) {
+      showCategories.value = false;
     }
   };
 
