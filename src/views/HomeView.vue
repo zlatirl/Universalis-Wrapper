@@ -5,11 +5,12 @@
   import { initializeWebSocket, closeWebSocket } from '../components/websocketService';
   import { dataCenters, worlds } from '../components/settings';
   import { SITE_NAME } from '../components/settings.js';
+  import { inject } from 'vue';
 
   // Reactive variables
   const listings = ref([]);
   const selectedDataCenter = ref("Light"); // Change this based on user selection
-  const selectedServer = ref(null);
+  const selectedServer = inject('selectedServer');
 
   // Mapping for city names to their corresponding icons
   const cityIcons = {
@@ -46,8 +47,10 @@
 
   // Grab Tax Rates from API
   const fetchMarketTaxRates = async () => {
+    if (!selectedServer.value) return;
+
     try {
-      const response = await axios.get('https://universalis.app/api/v2/tax-rates?world=zodiark');
+      const response = await axios.get(`https://universalis.app/api/v2/tax-rates?world=${selectedServer.value}`);
       const data = response.data;
 
       taxRates.value = Object.keys(data).map(city => ({
@@ -158,7 +161,7 @@
   // Fetch least recently updated items
   const fetchLeastUpdatedItems = async () => {
     try {
-      const response = await axios.get('https://universalis.app/api/v2/extra/stats/least-recently-updated?world=twintania&dcName=light&entries=6');
+      const response = await axios.get(`https://universalis.app/api/v2/extra/stats/least-recently-updated?world=${selectedServer.value}&entries=6`);
       const data = response.data;
 
       if (!data.items || data.items.length === 0) {
@@ -239,7 +242,7 @@
 
         <!-- Least Recently Updated Items -->
         <div class="container mt-5">
-        <h2 class="text-center mb-4">Least Recently Updated on {{ selectedDataCenter }}</h2>
+        <h2 class="text-center mb-4">Least Recently Updated on {{ selectedServer }}</h2>
         <ul class="list-group">
           <li v-for="item in leastUpdatedItems" :key="item.id" class="list-group-item d-flex align-items-center item-container">
             <img :src="item.image" alt="Item Icon" class="item-image me-3" />
@@ -277,7 +280,7 @@
 
         <div class="market-tax-card">
           <div class="card-body">
-            <h3 class="text-center">Current Market Tax Rates On Zodiark</h3>
+            <h3 class="text-center">Current Market Tax Rates On {{ selectedServer }}</h3>
             <div class="tax-icons">
               <div v-for="tax in taxRates" :key="tax.name" class="tax-item">
                 <img :src="tax.image" :alt="tax.name" class="tax-image" />

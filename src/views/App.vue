@@ -1,21 +1,34 @@
 <script setup>
   // Import modules and components
-  import { ref, watch, onMounted, onUnmounted } from 'vue';
+  import { ref, watch, onMounted, onUnmounted, provide } from 'vue';
   import { RouterLink, RouterView } from 'vue-router';
   import { SITE_NAME } from '../components/settings.js';
   import settingsModal from '../components/settingsModal.vue';
 
   // Reactive state variables
   const showSettings = ref(false);
+  const selectedServer = ref(null);
   const searchQuery = ref(''); // Define searchQuery
   const show = ref(false)
   const showCategories = ref(false);
   const items = ref([]);
   const activeCategory = ref('');
 
+  // Provide the selected server to child components
+  provide('selectedServer', selectedServer);
+
   // Function to toggle settings modal
   const toggleSettings = () => {
     showSettings.value = !showSettings.value;
+  };
+
+  // Save the selected server to localStorage
+  const handleSaveSettings = (server) => {
+    selectedServer.value = server;
+    localStorage.setItem('selectedServer', server); // Save to localStorage
+    localStorage.setItem('hasSelectedServer', 'true');
+    console.log('Selected Server:', selectedServer.value);
+    window.location.reload(); // Refresh the page to apply changes
   };
 
   // Function to close search when clicking outside
@@ -133,6 +146,16 @@
 
   // Attach and detach the event listener
   onMounted(() => {
+    const savedServer = localStorage.getItem('selectedServer');
+    if (savedServer) {
+      selectedServer.value = savedServer;
+    }
+    
+    const hasSelectedServer = localStorage.getItem('hasSelectedServer');
+    if (!hasSelectedServer) {
+      showSettings.value = true;
+    }
+    
     document.addEventListener("click", closeSearch);
   });
   
@@ -208,7 +231,12 @@
 
   <main class="flex-grow-1">
     <RouterView />
-    <settingsModal v-if="showSettings" @close="toggleSettings" />
+    <settingsModal 
+      v-if="showSettings" 
+      @close="toggleSettings" 
+      @save="handleSaveSettings"
+      :selectedServer="selectedServer"
+    />
   </main>
 </template>
 

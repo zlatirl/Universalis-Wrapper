@@ -3,10 +3,16 @@
 
   export default {
     name: 'SettingsModal',
+    props: {
+      selectedServer: {
+        type: String,
+        default: '', // Default to empty string if no server is selected
+      },
+    },
     data() {
       return {
         settings: {
-          server: '',
+          server: this.selectedServer, // Initialize with the selected server
           dataCenter: '',
           timezone: '',
         },
@@ -16,7 +22,7 @@
     computed: {
       groupedServers() {
         const regions = {
-          "Chaos - Europe": ["Cerberus", "Louisox", "Moogle", "Omega", "Phantom", "Ragnarok", "Sagittarius", "Spriggan"],
+          "Chaos - Europe": ["Cerberus", "Louisoix", "Moogle", "Omega", "Phantom", "Ragnarok", "Sagittarius", "Spriggan"],
           "Light - Europe": ["Alpha", "Lich", "Odin", "Phoenix", "Raiden", "Shiva", "Twintania", "Zodiark"],
           "Aether - North America": ["Adamantoise", "Cactuar", "Faerie", "Gilgamesh", "Jenova", "Midgardsormr", "Sargatanas", "Siren"],
           "Crystal - North America": ["Balmung", "Brynhildr", "Coeurl", "Diabolos", "Goblin", "Malboro", "Mateus", "Zalera"],
@@ -40,7 +46,11 @@
     methods: {
       saveSettings() {
         console.log('Settings saved:', this.settings);
-        this.$emit('close');
+        this.$emit('save', this.settings.server); // Emit the selected server
+        this.$emit('close'); // Close the modal
+
+        // Refresh the page
+        window.location.reload();
       },
     },
   };
