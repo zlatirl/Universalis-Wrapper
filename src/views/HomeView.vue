@@ -198,7 +198,7 @@
       if (response.data && response.data.uploadCountByDay) {
         const uploadData = response.data.uploadCountByDay;
 
-        // Extract the most recent day's uploads (last index in array)
+        // Extract the most recent day's uploads
         const todayUploads = uploadData.length > 0 ? uploadData[0] : 0;
 
         // Calculate total uploads from the last 7 days
