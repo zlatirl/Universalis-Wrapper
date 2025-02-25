@@ -8,8 +8,6 @@
   import { inject } from 'vue';
 
   // Reactive variables
-  const listings = ref([]);
-  const selectedDataCenter = ref("Light"); // Change this based on user selection
   const selectedServer = inject('selectedServer');
 
   // Mapping for city names to their corresponding icons
@@ -32,6 +30,9 @@
 
   // Reactive variable for tax rates
   const taxRates = ref([]);
+
+  // Upload Stats
+  const uploadStats = ref({ today: 0, week: 0 });
 
   // Util to throttle recent items update
   const throttle = (func, limit) => {
@@ -189,6 +190,30 @@
     }
   };
 
+  // Fetch Upload Count Per Day
+  const fetchUploadStats = async () => {
+    try {
+      const response = await axios.get(`https://universalis.app/api/v2/extra/stats/upload-history`);
+      
+      if (response.data && response.data.uploadCountByDay) {
+        const uploadData = response.data.uploadCountByDay;
+
+        // Extract the most recent day's uploads (last index in array)
+        const todayUploads = uploadData.length > 0 ? uploadData[0] : 0;
+
+        // Calculate total uploads from the last 7 days
+        const weekUploads = uploadData.slice(0, 7).reduce((acc, num) => acc + num, 0);
+        
+        uploadStats.value.today = todayUploads;
+        uploadStats.value.week = weekUploads;
+      } else {
+        console.warn("No upload data found.");
+      }
+    } catch (error) {
+      console.error('Error fetching upload count per day:', error);
+    }
+  }
+
   // WebSocket Setup
   onMounted(async () => {
     try {
@@ -199,6 +224,7 @@
         if (message.listings) {
           throttledUpdateRecentItems();
           fetchMarketTaxRates();
+          fetchUploadStats();
         }
       });
     } catch (error) {
@@ -262,7 +288,7 @@
       </main>
 
       <!-- Right Sidebar -->
-      <aside class="col-md-3 bg-light py-4">
+        <aside class="col-md-3 bg-light py-4">
         <div class="recent-updates">
           <h2>Recent Updates</h2>
           <ul class="list-group">
@@ -278,6 +304,7 @@
           </ul>
         </div>
 
+        <!-- Market Tax Card -->
         <div class="market-tax-card">
           <div class="card-body">
             <h3 class="text-center">Current Market Tax Rates On {{ selectedServer }}</h3>
@@ -290,9 +317,16 @@
           </div>
         </div>
 
-        <div>
-          <h2 class="text-center">Upload Counts by World</h2>
-          <div class="bg-secondary rounded p-4 text-center text-white">Chart Placeholder</div>
+        <!-- Upload Stats Container -->
+        <div class="upload-stats-container">
+          <div class="upload-box">
+            <span class="upload-title">Uploads Today</span>
+            <span class="upload-number">{{ uploadStats.today.toLocaleString() }}</span>
+          </div>
+          <div class="upload-box">
+            <span class="upload-title">Uploads This Week</span>
+            <span class="upload-number">{{ uploadStats.week.toLocaleString() }}</span>
+          </div>
         </div>
       </aside>
     </div>

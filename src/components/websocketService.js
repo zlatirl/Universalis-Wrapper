@@ -43,7 +43,7 @@ const initializeWebSocket = async (callback) => {
                 const message = deserialize(uint8Array);
         
                 // Log to confirm WebSocket is still running
-                console.log('WebSocket is running. Received message:', message);
+                // console.log('WebSocket is running. Received message:', message);
         
                 // Call the provided callback with the parsed message
                 if (callback) await callback(message);
