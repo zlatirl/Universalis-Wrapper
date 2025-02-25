@@ -101,6 +101,33 @@
   // Throttle the updateRecentItems function to run at most one per minute
   const throttledUpdateRecentItems = throttle(updateRecentItems, 60000);
 
+  // Fetch Upload Count Per Day
+  const fetchUploadStats = async () => {
+    try {
+      const response = await axios.get(`https://universalis.app/api/v2/extra/stats/upload-history`);
+      
+      if (response.data && response.data.uploadCountByDay) {
+        const uploadData = response.data.uploadCountByDay;
+
+        // Extract today's uploads
+        const todayUploads = uploadData.length > 0 ? uploadData[0] : 0;
+
+        // Calculate total uploads from the last 7 days
+        const weekUploads = uploadData.slice(0, 7).reduce((acc, num) => acc + num, 0);
+        
+        uploadStats.value.today = todayUploads;
+        uploadStats.value.week = weekUploads;
+      } else {
+        console.warn("No upload data found.");
+      }
+    } catch (error) {
+      console.error('Error fetching upload count per day:', error);
+    }
+  }
+
+  // Throttle the fetchUploadStats to run at most one per minute
+  const throttledFetchUploadStats = throttle(fetchUploadStats, 60000); // 60 seconds
+
   // Fetch item names from XIVAPI using the same logic as in App.vue
   const fetchItemsFromXIVAPI = async (itemIDs) => {
     try {
@@ -190,30 +217,6 @@
     }
   };
 
-  // Fetch Upload Count Per Day
-  const fetchUploadStats = async () => {
-    try {
-      const response = await axios.get(`https://universalis.app/api/v2/extra/stats/upload-history`);
-      
-      if (response.data && response.data.uploadCountByDay) {
-        const uploadData = response.data.uploadCountByDay;
-
-        // Extract the most recent day's uploads
-        const todayUploads = uploadData.length > 0 ? uploadData[0] : 0;
-
-        // Calculate total uploads from the last 7 days
-        const weekUploads = uploadData.slice(0, 7).reduce((acc, num) => acc + num, 0);
-        
-        uploadStats.value.today = todayUploads;
-        uploadStats.value.week = weekUploads;
-      } else {
-        console.warn("No upload data found.");
-      }
-    } catch (error) {
-      console.error('Error fetching upload count per day:', error);
-    }
-  }
-
   // WebSocket Setup
   onMounted(async () => {
     try {
@@ -224,7 +227,7 @@
         if (message.listings) {
           throttledUpdateRecentItems();
           fetchMarketTaxRates();
-          fetchUploadStats();
+          throttledFetchUploadStats();
         }
       });
     } catch (error) {
@@ -271,7 +274,9 @@
         <h2 class="text-center mb-4">Least Recently Updated on {{ selectedServer }}</h2>
         <ul class="list-group">
           <li v-for="item in leastUpdatedItems" :key="item.id" class="list-group-item d-flex align-items-center item-container">
-            <img :src="item.image" alt="Item Icon" class="item-image me-3" />
+            <a :href="`/item/${item.id}`" class="item-link">
+              <img :src="item.image" alt="Item Icon" class="item-image me-3" />
+            </a>
             <div>
               <a :href="`/item/${item.id}`" class="item-link">
                 <strong class="text-primary">{{ item.name }}</strong>
