@@ -465,4 +465,27 @@
   .recent-updates .list-group-item {
     padding: 8px;
   }
+
+  /* Styling For Upload Stats Box */
+  .upload-stats-container {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    background-color: #ffffff;
+    padding: 15px;
+    border-radius: 10px;
+    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.2);
+    margin-top: 10px;
+  }
+  
+  /* Make the title bold */
+  .upload-title {
+    font-weight: bold;
+  }
+
+  /* Center the upload numbers */
+  .upload-number {
+    display: block;
+    text-align: center;
+  }
 </style>
