@@ -21,6 +21,31 @@
   // Filtering variables
   const selectedDataCenter = ref("Europe");
   const selectedWorld = ref("");
+  const savedItems = ref(JSON.parse(localStorage.getItem('savedItems') || '[]'));
+
+  // Checks if the current item is saved
+  const isItemSaved = computed(() => {
+    return savedItems.value.some(item => item.id === itemId.value);
+  });
+
+  // Function to toggle the saved state of the item
+  const toggleSaveItem = () => {
+    if (isItemSaved.value) {
+      // Remove the item if it is already saved
+      savedItems.value = savedItems.value.filter(item => item.id !== itemId.value);
+    } else {
+      // Add the item to the saved list
+      savedItems.value.push({
+        id: itemId.value,
+        name: itemData.value.name,
+        image: itemData.value.image,
+        category: itemData.value.category,
+        savedAt: new Date().toISOString()
+      });
+    }
+
+    localStorage.setItem('savedItems', JSON.stringify(savedItems.value));
+  }
 
   // Watch when selectedDataCenter changes and fetch the items with the new value (reset selectedWorld)
   watch(selectedDataCenter, async () => {
@@ -128,6 +153,15 @@
             <p class="item-description">{{ itemData.description }}</p>
           </div>
         </div>
+        
+          <!-- Save Button -->
+          <button
+            @click="toggleSaveItem"
+            class="save-button"
+            :class="{ 'saved': isItemSaved }"
+          >
+            {{ isItemSaved ? 'Unsave' : 'Save' }}
+          </button>
       </div>
 
       <!-- Filtering Controls -->

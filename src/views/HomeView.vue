@@ -1,6 +1,6 @@
 <script setup>
   // Import modules and components
-  import { ref, computed, onMounted, onUnmounted } from 'vue';
+  import { ref, computed, onMounted, onUnmounted, watch } from 'vue';
   import axios from 'axios';
   import { initializeWebSocket, closeWebSocket } from '../components/websocketService';
   import { dataCenters, worlds } from '../components/settings';
@@ -9,6 +9,7 @@
 
   // Reactive variables
   const selectedServer = inject('selectedServer');
+  const savedItems = ref([]);
 
   // Mapping for city names to their corresponding icons
   const cityIcons = {
@@ -21,6 +22,17 @@
     "Old Sharlayan": "https://xivapi.com/i/060000/060887.png",
     "Tuliyollal": "https://xivapi.com/i/060000/060888.png"
   };
+
+  // Function to load saved items from local storage
+  const loadSavedItems = () => {
+    savedItems.value = JSON.parse(localStorage.getItem('savedItems') || []);
+  };
+
+  // This function will remove an item from saved items
+  const removeFromSaved = (itemId) => {
+    savedItems.value = savedItems.value.filter(item => item.id !== itemId);
+    localStorage.setItem('savedItems', JSON.stringify(savedItems.value));
+  }
 
   // Least Updated Items
   const leastUpdatedItems = ref([]);
@@ -228,8 +240,17 @@
           throttledUpdateRecentItems();
           fetchMarketTaxRates();
           throttledFetchUploadStats();
+          loadSavedItems();
         }
       });
+
+      // Event listener for local storage changes
+      window.addEventListener('storage', (event) => {
+        if (event.key === 'savedItems') {
+          loadSavedItems();
+        }
+      });
+
     } catch (error) {
       console.error('Error initializing WebSocket:', error);
     }
@@ -238,6 +259,14 @@
   onUnmounted(async () => {
     try {
       await closeWebSocket();
+
+      // Remove the event listener
+      window.removeEventListener('storage', (event) => {
+        if (event.key === 'savedItems') {
+          loadSavedItems();
+        }
+      });
+
     } catch (error) {
       console.error('Error closing WebSocket:', error);
     }
@@ -252,7 +281,32 @@
         <div class="card h-100">
           <div class="card-body">
             <h2 class="text-center">Saved Items</h2>
-            <p class="text-center">Lists, Alerts, Market activity, and retainer links will show here soon.</p>
+
+            <!-- Saved Items List -->
+            <div v-if="savedItems.length === 0" class="text-center py-4">
+              <p class="text-muted">You haven't saved any items yet.</p>
+            </div>
+            <ul v-else class="list-group saved-items-list">
+              <li v-for="item in savedItems" :key="item.id" class="list-group-item saved-item">
+                <a :href="`/item/${item.id}`" class="saved-item-link">
+                  <div class="saved-item-image-container">
+                    <img :src="item.image" alt="Item Icon" class="saved-item-image" />
+                  </div>
+                  <div class="saved-item-details">
+                    <div class="saved-item-name">{{ item.name }}</div>
+                    <small class="saved-item-category">{{ item.category }}</small>
+                    <small class="saved-item-date">Saved: {{ new Date(item.savedAt).toLocaleDateString() }}</small>
+                  </div>
+                </a>
+                <button
+                  @click="removeFromSaved(item.id)"
+                  class="remove-saved-item-btn"
+                  title="Remove from saved items"
+                >
+                  X
+                </button>
+              </li>
+            </ul>
           </div>
         </div>
       </aside>

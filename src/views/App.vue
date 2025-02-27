@@ -75,42 +75,36 @@
     }
   }
 
-  // Watch for changes in the search input and update results dynamically
-  watch(searchQuery, async (newValue, oldValue) => {
-    console.log(`search changed from: ${oldValue} to ${newValue}`)
-
-    if (newValue) {
-      activeCategory.value = '';
-    }
-
-    handleShow(newValue.length)
-
-    // Fetch item data from API
-    const list = await fetchItems(newValue)
-
-    // Update item icon URLs
-    list.forEach(item => {
-      let url = item.fields.Icon.path.split("/")
-      let finalUrl = `https://xivapi.com/i/${url[2]}/${url[3].slice(0, 6)}.png`
-      item.fields.Icon.path = finalUrl
-    });
-
-    items.value = list // Update items with new data
-  })
-
-  // Function to fetch items from XIVAPI based on user input
   const fetchItems = async (itemName) => {
     try {
-      const response = await fetch(`https://v2.xivapi.com/api/search?sheets=Item&query=%2BName%7E%22${itemName}%22+%2BItemSearchCategory%3E%3D1&language=en&limit=30&fields=Name%2CItemSearchCategory.Name%2CIcon%2CLevelItem.todo%2CRarity`)
+      const response = await fetch(`https://v2.xivapi.com/api/search?sheets=Item&query=%2BName%7E%22${itemName}%22+%2BItemSearchCategory%3E%3D1&language=en&limit=30&fields=Name%2CItemSearchCategory.Name%2CIcon%2CLevelItem.todo%2CRarity`);
       const data = await response.json();
-      console.log(data.results)
-      return data.results
+      return data.results || [];
     } catch (error) {
       console.error('Error fetching item names:', error);
+      return [];
     }
   };
 
-  // Function to fetch items for a specific category
+  // Watch for changes in the search input and update results dynamically
+  watch(searchQuery, async (newValue) => {
+    console.log(`search changed to: ${newValue}`);
+    if (newValue) activeCategory.value = '';
+    handleShow(newValue.length);
+
+    const list = await fetchItems(newValue);
+    if (Array.isArray(list)) {
+      list.forEach(item => {
+        const urlParts = item.fields.Icon.path.split("/");
+        item.fields.Icon.path = `https://xivapi.com/i/${urlParts[2]}/${urlParts[3].slice(0, 6)}.png`;
+      });
+      items.value = list;
+    } else {
+      items.value = [];
+    }
+  });
+
+  // Fetch Items By Category
   const fetchCategoryItems = async (categoryName) => {
     showCategories.value = false;
     searchQuery.value = '';
@@ -118,29 +112,31 @@
     try {
       const response = await fetch(`https://v2.xivapi.com/api/search?sheets=Item&query=%2BItemSearchCategory.Name%3D%22${categoryName}%22&language=en&limit=100&fields=Name%2CItemSearchCategory.Name%2CIcon`);
       const data = await response.json();
-
-      if (data.results) {
+      
+      if (data.results && Array.isArray(data.results)) {
         processItems(data.results);
         activeCategory.value = categoryName;
         show.value = true;
       } else {
-        console.warn("No items found for category:", categoryName);
         items.value = [];
       }
     } catch (error) {
       console.error('Error fetching category items:', error);
+      items.value = [];
     }
   };
 
   // Function to process fetched items
   const processItems = (list) => {
+    if (!Array.isArray(list)) {
+      items.value = [];
+      return;
+    }
     list.forEach((item) => {
-      let url = item.fields.Icon.path.split('/');
-      let finalUrl = `https://xivapi.com/i/${url[2]}/${url[3].slice(0, 6)}.png`;
-      item.fields.Icon.path = finalUrl;
+      const urlParts = item.fields.Icon.path.split('/');
+      item.fields.Icon.path = `https://xivapi.com/i/${urlParts[2]}/${urlParts[3].slice(0, 6)}.png`;
     });
-
-    items.value = list; // Update items with new data
+    items.value = list;
     show.value = true;
   };
 
