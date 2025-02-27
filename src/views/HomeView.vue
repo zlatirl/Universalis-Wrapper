@@ -76,6 +76,9 @@
     }
   }
 
+  // Throttle the fetchMarketTaxRates function to run at most one per minute
+  const throttledfetchMarketTaxRates = throttle(fetchMarketTaxRates, 60000);
+
   // Grab the most recent items from the API
   const updateRecentItems = async () => {
     try {
@@ -238,7 +241,7 @@
       await initializeWebSocket((message) => {
         if (message.listings) {
           throttledUpdateRecentItems();
-          fetchMarketTaxRates();
+          throttledfetchMarketTaxRates();
           throttledFetchUploadStats();
           loadSavedItems();
         }

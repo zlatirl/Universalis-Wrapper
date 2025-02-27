@@ -85,22 +85,24 @@
       return [];
     }
   };
-
+  
   // Watch for changes in the search input and update results dynamically
   watch(searchQuery, async (newValue) => {
-    console.log(`search changed to: ${newValue}`);
-    if (newValue) activeCategory.value = '';
-    handleShow(newValue.length);
+    if (newValue) {
+      console.log(`search changed to: ${newValue}`);
+      activeCategory.value = '';
+      handleShow(newValue.length);
 
-    const list = await fetchItems(newValue);
-    if (Array.isArray(list)) {
-      list.forEach(item => {
-        const urlParts = item.fields.Icon.path.split("/");
-        item.fields.Icon.path = `https://xivapi.com/i/${urlParts[2]}/${urlParts[3].slice(0, 6)}.png`;
-      });
-      items.value = list;
-    } else {
-      items.value = [];
+      const list = await fetchItems(newValue);
+      if (Array.isArray(list)) {
+        list.forEach(item => {
+          const urlParts = item.fields.Icon.path.split("/");
+          item.fields.Icon.path = `https://xivapi.com/i/${urlParts[2]}/${urlParts[3].slice(0, 6)}.png`;
+        });
+        items.value = list;
+      } else {
+        items.value = [];
+      }
     }
   });
 
