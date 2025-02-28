@@ -3,7 +3,7 @@
   import { ref, onMounted, computed, watch } from 'vue';
   import { useRoute } from 'vue-router';
   import axios from 'axios';
-  import { worlds, dataCenters } from '../components/settings';
+  import { worlds, dataCenters, dataCentersGroups } from '../components/settings';
 
   // Reactive variables
   const route = useRoute();
@@ -14,7 +14,11 @@
     description: '',
     image: '',
   });
-  const marketData = ref(null);
+  const marketData = ref({
+    hqListings: [],
+    nqListings: [],
+    recentHistory: [],
+  });
   const loading = ref(true);
   const error = ref(null);
 
@@ -22,6 +26,20 @@
   const selectedDataCenter = ref("Europe");
   const selectedWorld = ref("");
   const savedItems = ref(JSON.parse(localStorage.getItem('savedItems') || '[]'));
+  const recentlyViewedItems = ref(JSON.parse(localStorage.getItem('recentlyViewedItems') || '[]'));
+
+  // Retrieve saved server from localStorage
+  const savedServer = localStorage.getItem('selectedServer');
+  if (savedServer) {
+    // Find the data center for the saved server
+    for (const [dc, worldIds] of Object.entries(dataCenters)) {
+      if (worldIds.includes(worlds[savedServer])) {
+        selectedDataCenter.value = dc;
+        selectedWorld.value = worlds[savedServer];
+        break;
+      }
+    }
+  }
 
   // Checks if the current item is saved
   const isItemSaved = computed(() => {
@@ -47,16 +65,49 @@
     localStorage.setItem('savedItems', JSON.stringify(savedItems.value));
   }
 
+  // Function to add the current item to recently viewed items
+  const addToRecentlyViewed = () => {
+    const existingItemIndex = recentlyViewedItems.value.findIndex(i => i.id === itemId.value);
+    if (existingItemIndex !== -1) {
+      recentlyViewedItems.value.splice(existingItemIndex, 1);
+    }
+    recentlyViewedItems.value.unshift({
+      id: itemId.value,
+      name: itemData.value.name,
+      image: itemData.value.image,
+      category: itemData.value.category,
+      viewedAt: new Date().toISOString()
+    });
+    if (recentlyViewedItems.value.length > 5) {
+      recentlyViewedItems.value.pop();
+    }
+    localStorage.setItem('recentlyViewedItems', JSON.stringify(recentlyViewedItems.value));
+  };
+
   // Watch when selectedDataCenter changes and fetch the items with the new value (reset selectedWorld)
   watch(selectedDataCenter, async () => {
     fetchMarketData();
     selectedWorld.value = "";
   });
 
-  // Computed filtered listings
-  const filteredListings = computed(() => {
-    if (!marketData.value) return [];
-    return marketData.value.listings.filter((listing) => {
+  // Computed filtered listings - HQ
+  const filteredHqListings = computed(() => {
+    if (!marketData.value || !marketData.value.hqListings) return [];
+    return marketData.value.hqListings.filter((listing) => {
+      const matchesDataCenter = selectedDataCenter.value
+        ? dataCenters[selectedDataCenter.value]?.includes(listing.worldID)
+        : true;
+      const matchesWorld = selectedWorld.value
+        ? listing.worldID === selectedWorld.value
+        : true;
+      return matchesDataCenter && matchesWorld;
+    });
+  });
+
+  // Computed filtered listings - NQ
+  const filteredNqListings = computed(() => {
+    if (!marketData.value || !marketData.value.nqListings) return [];
+    return marketData.value.nqListings.filter((listing) => {
       const matchesDataCenter = selectedDataCenter.value
         ? dataCenters[selectedDataCenter.value]?.includes(listing.worldID)
         : true;
@@ -68,7 +119,7 @@
   });
 
   const filteredHistory = computed(() => {
-    if (!marketData.value) return [];
+    if (!marketData.value || !marketData.value.recentHistory) return [];
     return marketData.value.recentHistory.filter((sale) => {
       const matchesDataCenter = selectedDataCenter.value
         ? dataCenters[selectedDataCenter.value]?.includes(sale.worldID)
@@ -105,6 +156,8 @@
         description: data.fields.Description,
         image: imageExists ? universalisImageUrl : fallbackImageUrl, // This should prioritise Universalis, but will fallback to XIV if it doesn't exist within Universalis's API
       };
+
+      addToRecentlyViewed();
     } catch (err) {
       console.error("Error fetching item details:", err);
     }
@@ -114,13 +167,20 @@
   const fetchMarketData = async () => {
     try {
       loading.value = true;
-      const apiUrl = `https://universalis.app/api/v2/${selectedDataCenter.value}/${itemId.value}`;
+      const apiUrl = `https://universalis.app/api/v2/${selectedDataCenter.value}/${itemId.value}?listings=30&entries=10`;
       const response = await fetch(apiUrl);
 
       if (!response.ok) {
         throw new Error(`Failed to fetch data: ${response.statusText}`);
       }
-      marketData.value = await response.json();
+      const data = await response.json();
+
+      // Ensure the data structure is correct
+      marketData.value = {
+        hqListings: data.listings ? data.listings.filter(listing => listing.hq) : [],
+        nqListings: data.listings ? data.listings.filter(listing => !listing.hq) : [],
+        recentHistory: data.recentHistory || [],
+      };
     } catch (err) {
       error.value = err.message;
     } finally {
@@ -207,9 +267,34 @@
               </tr>
             </thead>
             <tbody>
-              <tr v-for="(listing, index) in filteredListings" :key="index">
+              <tr v-for="(listing, index) in filteredHqListings" :key="index">
                 <td>{{ index + 1 }}</td>
-                <td>{{ worlds[listing.worldName] || `Server ${listing.worldName}` }}</td>
+                <td>{{ worlds[listing.worldName] || `${listing.worldName}` }}</td>
+                <td>{{ listing.pricePerUnit }}</td>
+                <td>{{ listing.quantity }}</td>
+                <td>{{ listing.retainerName }}</td>
+              </tr>
+            </tbody>
+          </table>
+        </section>
+
+        <!-- NQ Prices Section -->
+        <section>
+          <h2>NQ Prices</h2>
+          <table>
+            <thead>
+              <tr>
+                <th>#</th>
+                <th>Server</th>
+                <th>Price</th>
+                <th>Quantity</th>
+                <th>Retainer</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr v-for="(listing, index) in filteredNqListings" :key="index">
+                <td>{{ index + 1 }}</td>
+                <td>{{ worlds[listing.worldName] || `${listing.worldName}` }}</td>
                 <td>{{ listing.pricePerUnit }}</td>
                 <td>{{ listing.quantity }}</td>
                 <td>{{ listing.retainerName }}</td>

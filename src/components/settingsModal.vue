@@ -49,6 +49,8 @@
         this.$emit('save', this.settings.server); // Emit the selected server
         this.$emit('close'); // Close the modal
 
+        localStorage.setItem('selectedServer', this.settings.server);
+
         // Refresh the page
         window.location.reload();
       },

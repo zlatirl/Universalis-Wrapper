@@ -10,6 +10,9 @@
   // Reactive variables
   const selectedServer = inject('selectedServer');
   const savedItems = ref([]);
+  const recentlyViewedItems = ref([]);
+  const isSavedItemsOpen = ref(false);
+  const isRecentlyViewedOpen = ref(false);
 
   // Mapping for city names to their corresponding icons
   const cityIcons = {
@@ -33,6 +36,34 @@
     savedItems.value = savedItems.value.filter(item => item.id !== itemId);
     localStorage.setItem('savedItems', JSON.stringify(savedItems.value));
   }
+
+  // Function to load recently viewed items from local storage
+  const loadRecentlyViewedItems = () => {
+    recentlyViewedItems.value = JSON.parse(localStorage.getItem('recentlyViewedItems') || []);
+  };
+
+  // Function to add an item to recently viewed items
+  const addToRecentlyViewed = (item) => {
+    const existingItemIndex = recentlyViewedItems.value.findIndex(i => i.id === item.id);
+    if (existingItemIndex !== -1) {
+      recentlyViewedItems.value.splice(existingItemIndex, 1);
+    }
+    recentlyViewedItems.value.unshift(item);
+    if (recentlyViewedItems.value.length > 5) {
+      recentlyViewedItems.value.pop();
+    }
+    localStorage.setItem('recentlyViewedItems', JSON.stringify(recentlyViewedItems.value));
+  };
+
+  // Function to toggle the visibility of saved items
+  const toggleSavedItems = () => {
+    isSavedItemsOpen.value = !isSavedItemsOpen.value;
+  };
+
+  // Function to toggle the visibility of recently viewed items
+  const toggleRecentlyViewed = () => {
+    isRecentlyViewedOpen.value = !isRecentlyViewedOpen.value;
+  };
 
   // Least Updated Items
   const leastUpdatedItems = ref([]);
@@ -244,6 +275,7 @@
           throttledfetchMarketTaxRates();
           throttledFetchUploadStats();
           loadSavedItems();
+          loadRecentlyViewedItems();
         }
       });
 
@@ -283,33 +315,68 @@
       <aside class="col-md-3">
         <div class="card h-100">
           <div class="card-body">
-            <h2 class="text-center">Saved Items</h2>
+            <h2 class="text-center">Item History</h2>
 
-            <!-- Saved Items List -->
-            <div v-if="savedItems.length === 0" class="text-center py-4">
-              <p class="text-muted">You haven't saved any items yet.</p>
+            <!-- Saved Items Section -->
+            <div class="saved-items-section">
+              <h2 class="text-center" @click="toggleSavedItems">
+                Saved Items
+                <span class="dropdown-arrow">{{ isSavedItemsOpen ? '▲' : '▼' }}</span>
+              </h2>
+              <div v-if="isSavedItemsOpen">
+                <div v-if="savedItems.length === 0" class="text-center py-4">
+                  <p class="text-muted">You haven't saved any items yet.</p>
+                </div>
+                <ul v-else class="list-group saved-items-list">
+                  <li v-for="item in savedItems" :key="item.id" class="list-group-item saved-item">
+                    <a :href="`/item/${item.id}`" class="saved-item-link">
+                      <div class="saved-item-image-container">
+                        <img :src="item.image" alt="Item Icon" class="saved-item-image" />
+                      </div>
+                      <div class="saved-item-details">
+                        <div class="saved-item-name">{{ item.name }}</div>
+                        <small class="saved-item-category">{{ item.category }}</small>
+                        <small class="saved-item-date">Saved: {{ new Date(item.savedAt).toLocaleDateString() }}</small>
+                      </div>
+                    </a>
+                    <button
+                      @click="removeFromSaved(item.id)"
+                      class="remove-saved-item-btn"
+                      title="Remove from saved items"
+                    >
+                      X
+                    </button>
+                  </li>
+                </ul>
+              </div>
             </div>
-            <ul v-else class="list-group saved-items-list">
-              <li v-for="item in savedItems" :key="item.id" class="list-group-item saved-item">
-                <a :href="`/item/${item.id}`" class="saved-item-link">
-                  <div class="saved-item-image-container">
-                    <img :src="item.image" alt="Item Icon" class="saved-item-image" />
-                  </div>
-                  <div class="saved-item-details">
-                    <div class="saved-item-name">{{ item.name }}</div>
-                    <small class="saved-item-category">{{ item.category }}</small>
-                    <small class="saved-item-date">Saved: {{ new Date(item.savedAt).toLocaleDateString() }}</small>
-                  </div>
-                </a>
-                <button
-                  @click="removeFromSaved(item.id)"
-                  class="remove-saved-item-btn"
-                  title="Remove from saved items"
-                >
-                  X
-                </button>
-              </li>
-            </ul>
+
+            <!-- Recently Viewed Items -->
+            <div class="recently-viewed-section">
+              <h2 class="text-center mt-4" @click="toggleRecentlyViewed">
+                Recently Viewed
+                <span class="dropdown-arrow">{{ isRecentlyViewedOpen ? '▲' : '▼' }}</span>
+              </h2>
+              <div v-if="isRecentlyViewedOpen">
+                <div v-if="recentlyViewedItems.length === 0" class="text-center py-4">
+                  <p class="text-muted">You haven't viewed any items yet.</p>
+                </div>
+                <ul v-else class="list-group recently-viewed-list">
+                  <li v-for="item in recentlyViewedItems" :key="item.id" class="list-group-item recently-viewed-item">
+                    <a :href="`/item/${item.id}`" class="recently-viewed-item-link">
+                      <div class="recently-viewed-item-image-container">
+                        <img :src="item.image" alt="Item Icon" class="recently-viewed-item-image" />
+                      </div>
+                      <div class="recently-viewed-item-details">
+                        <div class="recently-viewed-item-name">{{ item.name }}</div>
+                        <small class="recently-viewed-item-category">{{ item.category }}</small>
+                        <small class="recently-viewed-item-date">Viewed: {{ new Date(item.viewedAt).toLocaleDateString() }}</small>
+                      </div>
+                    </a>
+                  </li>
+                </ul>
+              </div>
+            </div>
           </div>
         </div>
       </aside>
