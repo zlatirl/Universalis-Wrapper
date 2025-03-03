@@ -102,7 +102,12 @@
         items.value = list;
       } else {
         items.value = [];
+        show.value = false;
       }
+    } else {
+      // Clear the search results when the search query is empty
+      items.value = [];
+      show.value = false;
     }
   });
 
