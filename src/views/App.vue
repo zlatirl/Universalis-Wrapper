@@ -234,6 +234,7 @@
 
   <main class="flex-grow-1">
     <RouterView />
+    <Notifications />
     <settingsModal 
       v-if="showSettings" 
       @close="toggleSettings" 

@@ -4,6 +4,7 @@
   import { useRoute } from 'vue-router';
   import axios from 'axios';
   import { worlds, dataCenters, dataCentersGroups } from '../components/settings';
+  import PricePrediction from '../components/PricePrediction.vue';
 
   // Reactive variables
   const route = useRoute();
@@ -467,6 +468,12 @@
           <p v-else>Calculated: {{ calculatedSaleVelocity ? calculatedSaleVelocity.toFixed(3) : 'N/A' }}</p>
         </div>
       </div>
+
+      <!-- Price Prediction Component -->
+      <PricePrediction 
+        :marketData="marketData"
+        :loading="loading"
+      />
     </div>
   </main>
 </template>
