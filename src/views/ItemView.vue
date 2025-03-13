@@ -1,10 +1,11 @@
 <script setup>
   // Import modules and components
-  import { ref, onMounted, computed, watch } from 'vue';
+  import { ref, onMounted, onUnmounted, computed, watch } from 'vue';
   import { useRoute } from 'vue-router';
   import axios from 'axios';
   import { worlds, dataCenters, dataCentersGroups } from '../components/settings';
   import PricePrediction from '../components/PricePrediction.vue';
+  import { inject } from 'vue';
 
   // Reactive variables
   const route = useRoute();
@@ -28,6 +29,9 @@
   const calculatedSaleVelocity = ref(null);
   const useCalculatedStats = ref(false);
   const rawApiResponse = ref(null);
+  
+  // Inject the notification store
+  const notificationStore = inject('notificationStore');
 
   // Filtering variables
   const selectedDataCenter = ref("Europe");
@@ -61,6 +65,11 @@
     if (isItemSaved.value) {
       // Remove the item if it is already saved
       savedItems.value = savedItems.value.filter(item => item.id !== itemId.value);
+      notificationStore.addNotification({
+        message: `Removed ${itemData.value.name} from saved items.`,
+        type: 'success',
+        timeout: 3000
+      });
     } else {
       // Add the item to the saved list
       savedItems.value.push({
@@ -70,10 +79,15 @@
         category: itemData.value.category,
         savedAt: new Date().toISOString()
       });
+      notificationStore.addNotification({
+        message: `Added ${itemData.value.name} to saved items.`,
+        type: 'success',
+        timeout: 3000
+      });
     }
 
     localStorage.setItem('savedItems', JSON.stringify(savedItems.value));
-  }
+  };
 
   // Computed property to find the cheapest HQ listing
   const cheapestHQListing = computed(() => {
@@ -269,10 +283,25 @@
     return `${diffDays} days ago`;
   };
 
+  // Declare interval outside of onMounted
+  let interval;
+
   // Fetch data on component mount
   onMounted(() => {
     fetchItemDetails();
     fetchMarketData(true);
+
+    // Periodically check for updates every 5 minutes
+    interval = setInterval(() => {
+      fetchMarketData();
+    }, 5 * 60 * 1000); // 5 minutes
+  });
+
+  // Cleanup interval on unmount
+  onUnmounted(() => {
+    if (interval) {
+      clearInterval(interval);
+    }
   });
 </script>
 

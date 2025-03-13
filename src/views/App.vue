@@ -4,22 +4,35 @@
   import { RouterLink, RouterView } from 'vue-router';
   import { SITE_NAME } from '../components/settings.js';
   import settingsModal from '../components/settingsModal.vue';
+  import Notification from '../components/Notification.vue';
+  import { useNotificationStore } from '../stores/notification';
+  import { useMarketWatcher } from '../services/marketWatcher.js';
+  import NotificationDropdown from '../components/NotificationDropdown.vue';
 
   // Reactive state variables
   const showSettings = ref(false);
   const selectedServer = ref(null);
   const searchQuery = ref(''); // Define searchQuery
-  const show = ref(false)
+  const show = ref(false);
   const showCategories = ref(false);
   const items = ref([]);
   const activeCategory = ref('');
+  const showNotifications = ref(false);
 
-  // Provide the selected server to child components
+  const { startMarketWatcher } = useMarketWatcher();
+
+  // Provide the selected server and notification store to child components
   provide('selectedServer', selectedServer);
+  provide('notificationStore', useNotificationStore());
 
   // Function to toggle settings modal
   const toggleSettings = () => {
     showSettings.value = !showSettings.value;
+  };
+
+  // Function to toggle notification dropdown
+  const toggleNotifications = () => {
+    showNotifications.value = !showNotifications.value;
   };
 
   // Save the selected server to localStorage
@@ -37,6 +50,8 @@
     const searchInput = document.querySelector(".form-control");
     const categoryDropdown = document.querySelector(".category-dropdown");
     const categoryButton = document.querySelector(".btn-secondary");
+    const notificationDropdown = document.querySelector(".notification-dropdown");
+    const notificationButton = document.querySelector(".notification-button");
     
     // If the click is NOT inside the search results or search input, hide the dropdown
     if (
@@ -54,6 +69,14 @@
     ) {
       showCategories.value = false;
     }
+
+    // If clicking outside notifications, hide notification dropdown
+    if (
+      notificationDropdown && !notificationDropdown.contains(event.target) &&
+      notificationButton && !notificationButton.contains(event.target)
+    ) {
+      showNotifications.value = false;
+    }
   };
 
   // Function to handle search query
@@ -64,16 +87,16 @@
   // Function to toggle categories dropdown
   const toggleCategories = () => {
     showCategories.value = !showCategories.value;
-  }
+  };
 
   // Function to handle search results
   const handleShow = (length) => {
     if (length > 0) {
-      show.value = true
+      show.value = true;
     } else {
-      show.value = false
+      show.value = false;
     }
-  }
+  };
 
   const fetchItems = async (itemName) => {
     try {
@@ -159,6 +182,7 @@
       showSettings.value = true;
     }
     
+    startMarketWatcher();
     document.addEventListener("click", closeSearch);
   });
   
@@ -226,15 +250,21 @@
       </div>
     </div>
 
-    <!-- Settings Button -->
+    <!-- Notification Button and Dropdown -->
     <div class="header-buttons">
+      <button class="btn btn-primary notification-button" @click="toggleNotifications">
+        Notifications
+      </button>
+      <NotificationDropdown v-if="showNotifications" />
+
+      <!-- Settings Button -->
       <button class="btn btn-primary" @click="toggleSettings">Settings</button>
     </div>
   </header>
 
   <main class="flex-grow-1">
     <RouterView />
-    <Notifications />
+    <Notification />
     <settingsModal 
       v-if="showSettings" 
       @close="toggleSettings" 
