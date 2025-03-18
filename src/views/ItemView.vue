@@ -5,6 +5,7 @@
   import axios from 'axios';
   import { worlds, dataCenters, dataCentersGroups } from '../components/settings';
   import PricePrediction from '../components/PricePrediction.vue';
+  import PriceHistoryChart from '../components/PriceHistoryChart.vue';
   import { inject } from 'vue';
 
   // Reactive variables
@@ -20,14 +21,9 @@
     hqListings: [],
     nqListings: [],
     recentHistory: [],
-    averagePrice: null,
-    saleVelocity: null,
   });
   const loading = ref(true);
   const error = ref(null);
-  const calculatedAveragePrice = ref(null);
-  const calculatedSaleVelocity = ref(null);
-  const useCalculatedStats = ref(false);
   const rawApiResponse = ref(null);
   
   // Inject the notification store
@@ -149,40 +145,6 @@
   const filteredHistory = computed(() => {
     return marketData.value.recentHistory || [];
   });
-  
-  // Function to calculate market statistics
-  const calculateMarketStatistics = (data) => {
-    // Calculate our own average price from recent history
-    if (data.recentHistory && data.recentHistory.length > 0) {
-      const totalGil = data.recentHistory.reduce((sum, sale) => sum + (sale.pricePerUnit * sale.quantity), 0);
-      const totalItems = data.recentHistory.reduce((sum, sale) => sum + sale.quantity, 0);
-      calculatedAveragePrice.value = totalGil / totalItems;
-      
-      console.log("Calculated average price:", calculatedAveragePrice.value.toFixed(3));
-      console.log("Average price:", data.averagePrice);
-    }
-    
-    // Calculate sale velocity (sales per day)
-    if (data.recentHistory && data.recentHistory.length > 1) {
-      // Sort by time, oldest first
-      const sortedHistory = [...data.recentHistory].sort((a, b) => a.timestamp - b.timestamp);
-      const oldestTimestamp = sortedHistory[0].timestamp;
-      const newestTimestamp = sortedHistory[sortedHistory.length - 1].timestamp;
-      
-      // Calculate time span in days
-      const timeSpanSeconds = newestTimestamp - oldestTimestamp;
-      const timeSpanDays = timeSpanSeconds / (60 * 60 * 24);
-      
-      // Total quantity sold
-      const totalSold = sortedHistory.reduce((sum, sale) => sum + sale.quantity, 0);
-      
-      // Sales per day
-      calculatedSaleVelocity.value = timeSpanDays > 0 ? totalSold / timeSpanDays : 0;
-      
-      console.log("Calculated sales velocity:", calculatedSaleVelocity.value.toFixed(3));
-      console.log("API sales velocity:", data.regularSaleVelocity);
-    }
-  };
 
   // Fetch item details from XIVAPI
   const fetchItemDetails = async () => {
@@ -246,15 +208,12 @@
         hqListings: data.listings ? data.listings.filter(listing => listing.hq).slice(0, 10) : [],
         nqListings: data.listings ? data.listings.filter(listing => !listing.hq).slice(0, 10) : [],
         recentHistory: data.recentHistory ? data.recentHistory.slice(0, 10) : [],
-        averagePrice: data.averagePrice,
-        saleVelocity: data.regularSaleVelocity,
       };
 
       if (data.worldUploadTimes) {
         latestUpdates.value = data.worldUploadTimes;
       }
 
-      calculateMarketStatistics(data);
       console.log("Processed market data:", marketData.value); // Debugging log
     } catch (err) {
       error.value = err.message;
@@ -484,19 +443,11 @@
         </section>
       </div>
 
-      <!-- Average Price and Sale Velocity Section -->
-      <div class="market-stats">
-        <div class="stat-item">
-          <h3>Average Price</h3>
-          <p v-if="!useCalculatedStats">{{ marketData.averagePrice ? marketData.averagePrice.toFixed(3) : 'N/A' }} Gil</p>
-          <p v-else>Calculated: {{ calculatedAveragePrice ? calculatedAveragePrice.toFixed(3) : 'N/A' }}</p>
-        </div>
-        <div class="stat-item">
-          <h3>Sale Velocity</h3>
-          <p v-if="!useCalculatedStats">{{ marketData.saleVelocity ? marketData.saleVelocity.toFixed(3) : 'N/A' }} Gil</p>
-          <p v-else>Calculated: {{ calculatedSaleVelocity ? calculatedSaleVelocity.toFixed(3) : 'N/A' }}</p>
-        </div>
-      </div>
+      <!-- Price History Chart Component -->
+      <PriceHistoryChart 
+        :marketData="marketData"
+        :loading="loading"
+      />
 
       <!-- Price Prediction Component -->
       <PricePrediction 
@@ -762,35 +713,5 @@
     max-width: 400px;
     margin-right: 0;
     margin-left: 0;
-  }
-
-  /* Market Stats */
-  .market-stats {
-    display: flex;
-    gap: 2rem;
-    margin: 2rem 0;
-    justify-content: center;
-  }
-
-  .stat-item {
-    background-color: #f8f9fa;
-    border-radius: 8px;
-    padding: 1rem;
-    border: 1px solid #eee;
-    min-width: 200px;
-    text-align: center;
-  }
-
-  .stat-item h3 {
-    margin-top: 0;
-    font-size: 1.25rem;
-    color: #333;
-  }
-
-  .stat-item p {
-    font-size: 1.5rem;
-    font-weight: bold;
-    color: #007bff;
-    margin: 0.5rem 0;
   }
 </style>

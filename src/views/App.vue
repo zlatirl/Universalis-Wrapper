@@ -211,11 +211,104 @@
       <!-- Categories Dropdown -->
       <div v-if="showCategories" class="category-dropdown">
         <div class="category-section">
+          <!-- Weapons Section -->
           <strong>WEAPONS</strong>
           <div class="category-icons">
             <span class="category-icon" @click="fetchCategoryItems('Gladiator\'s Arms')">GLD</span>
             <span class="category-icon" @click="fetchCategoryItems('Marauder\'s Arms')">MRD</span>
             <span class="category-icon" @click="fetchCategoryItems('Dark Knight\'s Arms')">DRK</span>
+            <span class="category-icon" @click="fetchCategoryItems('Gunbreaker\'s Arms')">GNB</span>
+            <span class="category-icon" @click="fetchCategoryItems('Lancer\'s Arms')">LNC</span>
+            <span class="category-icon" @click="fetchCategoryItems('Reaper\'s Arms')">RPR</span>
+            <span class="category-icon" @click="fetchCategoryItems('Pugilist\'s Arms')">PGL</span>
+            <span class="category-icon" @click="fetchCategoryItems('Samurai\'s Arms')">SAM</span>
+            <span class="category-icon" @click="fetchCategoryItems('Rogue\'s Arms')">ROG</span>
+            <span class="category-icon" @click="fetchCategoryItems('Viper\'s Arms')">VPR</span>
+            <span class="category-icon" @click="fetchCategoryItems('Archer\'s Arms')">ARC</span>
+            <span class="category-icon" @click="fetchCategoryItems('Machinist\'s Arms')">MCH</span>
+            <span class="category-icon" @click="fetchCategoryItems('Dancer\'s Arms')">DNC</span>
+            <span class="category-icon" @click="fetchCategoryItems('Thaumaturge\'s Arms')">THM</span>
+            <span class="category-icon" @click="fetchCategoryItems('Arcanist\'s Arms')">ACN</span>
+            <span class="category-icon" @click="fetchCategoryItems('Red Mage\'s Arms')">RDM</span>
+            <span class="category-icon" @click="fetchCategoryItems('Conjurer\'s Arms')">CNJ</span>
+            <span class="category-icon" @click="fetchCategoryItems('Scholar\'s Arms')">SCH</span>
+            <span class="category-icon" @click="fetchCategoryItems('Astrologian\'s Arms')">AST</span>
+            <span class="category-icon" @click="fetchCategoryItems('Sage\'s Arms')">SGE</span>
+            <span class="category-icon" @click="fetchCategoryItems('Carpenter\'s Tools')">CRP</span>
+            <span class="category-icon" @click="fetchCategoryItems('Blacksmith\'s Tools')">BSM</span>
+            <span class="category-icon" @click="fetchCategoryItems('Armorer\'s Tools')">ARM</span>
+            <span class="category-icon" @click="fetchCategoryItems('Goldsmith\'s Tools')">GSM</span>
+            <span class="category-icon" @click="fetchCategoryItems('Leatherworker\'s Tools')">LTW</span>
+            <span class="category-icon" @click="fetchCategoryItems('Weaver\'s Tools')">WVR</span>
+            <span class="category-icon" @click="fetchCategoryItems('Alchemist\'s Tools')">ALC</span>
+            <span class="category-icon" @click="fetchCategoryItems('Culinarian\'s Tools')">CUL</span>
+            <span class="category-icon" @click="fetchCategoryItems('Miner\'s Tools')">MIN</span>
+            <span class="category-icon" @click="fetchCategoryItems('Botanist\'s Tools')">BTN</span>
+            <span class="category-icon" @click="fetchCategoryItems('Fisher\'s Tools')">FSH</span>
+            <span class="category-icon" @click="fetchCategoryItems('Fishing Tackle')">Tools</span>
+          </div>
+        </div>
+
+        <!-- Armor Section -->
+        <div class="category-section">
+          <strong>ARMOR</strong>
+          <div class="category-icons">
+            <span class="category-icon" @click="fetchCategoryItems('Head')">Head</span>
+            <span class="category-icon" @click="fetchCategoryItems('Body')">Body</span>
+            <span class="category-icon" @click="fetchCategoryItems('Hands')">Hands</span>
+            <span class="category-icon" @click="fetchCategoryItems('Legs')">Legs</span>
+            <span class="category-icon" @click="fetchCategoryItems('Feet')">Feet</span>
+            <span class="category-icon" @click="fetchCategoryItems('Waist')">Waist</span>
+            <span class="category-icon" @click="fetchCategoryItems('Necklace')">Neck</span>
+            <span class="category-icon" @click="fetchCategoryItems('Earrings')">Ears</span>
+            <span class="category-icon" @click="fetchCategoryItems('Bracelets')">Bracelets</span>
+            <span class="category-icon" @click="fetchCategoryItems('Ring')">Rings</span>
+          </div>
+        </div>
+
+        <!-- Item Section -->
+        <div class="category-section">
+          <strong>ITEMS</strong>
+          <div class="category-icons">
+            <span class="category-icon" @click="fetchCategoryItems('Medicine')">Medicine</span>
+            <span class="category-icon" @click="fetchCategoryItems('Ingredients')">Ingredients</span>
+            <span class="category-icon" @click="fetchCategoryItems('Meals')">Meals</span>
+            <span class="category-icon" @click="fetchCategoryItems('Seafood')">Seafood</span>
+            <span class="category-icon" @click="fetchCategoryItems('Stone')">Stone</span>
+            <span class="category-icon" @click="fetchCategoryItems('Metal')">Metal</span>
+            <span class="category-icon" @click="fetchCategoryItems('Lumber')">Lumber</span>
+            <span class="category-icon" @click="fetchCategoryItems('Cloth')">Cloth</span>
+            <span class="category-icon" @click="fetchCategoryItems('Leather')">Leather</span>
+            <span class="category-icon" @click="fetchCategoryItems('Bone')">Bone</span>
+            <span class="category-icon" @click="fetchCategoryItems('Reagent')">Reagent</span>
+            <span class="category-icon" @click="fetchCategoryItems('Dyes')">Dyes</span>
+            <span class="category-icon" @click="fetchCategoryItems('Weapon Parts')">Wpn Parts</span>
+            <span class="category-icon" @click="fetchCategoryItems('Materia')">Materia</span>
+            <span class="category-icon" @click="fetchCategoryItems('Crystal')">Crystal</span>
+            <span class="category-icon" @click="fetchCategoryItems('Catalysts')">Catalysts</span>
+            <span class="category-icon" @click="fetchCategoryItems('Miscellany')">Misc</span>
+            <span class="category-icon" @click="fetchCategoryItems('Seasonal Miscellany')">Misc 2</span>
+            <span class="category-icon" @click="fetchCategoryItems('Registrable Miscellany')">Misc 3</span>
+            <span class="category-icon" @click="fetchCategoryItems('Airship/Submersible Components')">Components</span>
+            <span class="category-icon" @click="fetchCategoryItems('Orchestrion Components')">Orchestrion</span>
+          </div>
+        </div>
+
+        <!-- Housing Section -->
+        <div class="category-section">
+          <strong>HOUSING</strong>
+          <div class="category-icons">
+            <span class="category-icon" @click="fetchCategoryItems('Exterior Fixtures')">Ext Fixtures</span>
+            <span class="category-icon" @click="fetchCategoryItems('Interior Fixtures')">Int Fixtures</span>
+            <span class="category-icon" @click="fetchCategoryItems('Outdoor Furnishings')">Out Furnishings</span>
+            <span class="category-icon" @click="fetchCategoryItems('Furnishings')">Furnishings</span>
+            <span class="category-icon" @click="fetchCategoryItems('Chairs and Beds')">Chairs & Beds</span>
+            <span class="category-icon" @click="fetchCategoryItems('Tables')">Tables</span>
+            <span class="category-icon" @click="fetchCategoryItems('Tabletop')">Tabletop</span>
+            <span class="category-icon" @click="fetchCategoryItems('Wall-mounted')">Wall-mounted</span>
+            <span class="category-icon" @click="fetchCategoryItems('Rugs')">Rugs</span>
+            <span class="category-icon" @click="fetchCategoryItems('Gardening Items')">Gardening</span>
+            <span class="category-icon" @click="fetchCategoryItems('Paintings')">Paintings</span>
           </div>
         </div>
       </div>
@@ -396,14 +489,57 @@
     top: 60px;
     z-index: 999;
     background-color: #2a2f36;
-    width: 400px;
+    width: 500px;
+    max-height: 600px;
+    overflow-y: auto;
     border-radius: 8px;
-    padding: 10px;
-    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+    padding: 15px;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.3);
   }
 
-  /* Removes The Bullet Points From Lists */
-  ul {
-    list-style-type: none;
+  /* Styles For Each Category Section */
+  .category-section {
+    margin-bottom: 20px;
+  }
+
+  .category-section strong {
+    display: block;
+    color: #e6c054;
+    font-size: 16px;
+    margin-bottom: 10px;
+    padding-bottom: 5px;
+    border-bottom: 1px solid #40474f;
+  }
+
+  /* Grid Container for Category Icons */
+  .category-icons {
+    display: grid;
+    grid-template-columns: repeat(6, 1fr);
+    gap: 8px;
+  }
+
+  /* Individual Category Icon */
+  .category-icon {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    background-color: #343a40;
+    color: white;
+    height: 40px;
+    font-size: 12px;
+    font-weight: bold;
+    border-radius: 4px;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    user-select: none;
+    text-align: center;
+    padding: 4px;
+  }
+
+  /* Hover Effect for Category Icons */
+  .category-icon:hover {
+    background-color: #40474f;
+    transform: translateY(-2px);
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
   }
 </style>
