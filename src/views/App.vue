@@ -345,7 +345,7 @@
 
     <!-- Notification Button and Dropdown -->
     <div class="header-buttons">
-      <button class="btn btn-primary notification-button" @click="toggleNotifications">
+      <button class="btn btn-primary notification-button me-2" @click="toggleNotifications">
         Notifications
       </button>
       <NotificationDropdown v-if="showNotifications" />

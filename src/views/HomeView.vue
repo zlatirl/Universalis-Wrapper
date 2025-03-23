@@ -77,6 +77,14 @@
   // Upload Stats
   const uploadStats = ref({ today: 0, week: 0 });
 
+  // Util to format category
+  const formatCategory = (category) => {
+    if (!category) return 'Unknown Category';
+    
+    // Remove any stack information from the category string
+    return category.replace(/\s*-?\s*Stack:.*$/i, '');
+  };
+
   // Util to throttle recent items update
   const throttle = (func, limit) => {
     let inThrottle;
@@ -313,73 +321,73 @@
     <div class="row">
       <!-- Sidebar -->
       <aside class="col-md-3">
-        <div class="card h-100">
-          <div class="card-body">
-            <h2 class="text-center">Item History</h2>
+      <div class="card h-100">
+        <div class="card-body">
+          <h2 class="text-center mb-4">Item History</h2>
 
-            <!-- Saved Items Section -->
-            <div class="saved-items-section">
-              <h2 class="text-center" @click="toggleSavedItems">
-                Saved Items
-                <span class="dropdown-arrow">{{ isSavedItemsOpen ? '▲' : '▼' }}</span>
-              </h2>
-              <div v-if="isSavedItemsOpen">
-                <div v-if="savedItems.length === 0" class="text-center py-4">
-                  <p class="text-muted">You haven't saved any items yet.</p>
-                </div>
-                <ul v-else class="list-group saved-items-list">
-                  <li v-for="item in savedItems" :key="item.id" class="list-group-item saved-item">
-                    <a :href="`/item/${item.id}`" class="saved-item-link">
-                      <div class="saved-item-image-container">
-                        <img :src="item.image" alt="Item Icon" class="saved-item-image" />
-                      </div>
-                      <div class="saved-item-details">
-                        <div class="saved-item-name">{{ item.name }}</div>
-                        <small class="saved-item-category">{{ item.category }}</small>
-                        <small class="saved-item-date">Saved: {{ new Date(item.savedAt).toLocaleDateString() }}</small>
-                      </div>
-                    </a>
-                    <button
-                      @click="removeFromSaved(item.id)"
-                      class="remove-saved-item-btn"
-                      title="Remove from saved items"
-                    >
-                      X
-                    </button>
-                  </li>
-                </ul>
+          <!-- Saved Items Section -->
+          <div class="saved-items-section">
+            <h2 @click="toggleSavedItems">
+              Saved Items
+              <span class="dropdown-arrow">{{ isSavedItemsOpen ? '▲' : '▼' }}</span>
+            </h2>
+            <div v-if="isSavedItemsOpen">
+              <div v-if="savedItems.length === 0" class="text-center py-4">
+                <p class="text-muted">You haven't saved any items yet.</p>
               </div>
+              <ul v-else class="list-group saved-items-list">
+                <li v-for="item in savedItems" :key="item.id" class="saved-item">
+                  <a :href="`/item/${item.id}`" class="saved-item-link">
+                    <div class="saved-item-image-container">
+                      <img :src="item.image" alt="Item Icon" class="saved-item-image" />
+                    </div>
+                    <div class="saved-item-details">
+                      <div class="saved-item-name">{{ item.name }}</div>
+                      <small class="saved-item-category">{{ formatCategory(item.category) }}</small>
+                      <small class="saved-item-date">Saved: {{ new Date(item.savedAt).toLocaleDateString() }}</small>
+                    </div>
+                  </a>
+                  <button
+                    @click.prevent="removeFromSaved(item.id)"
+                    class="remove-saved-item-btn"
+                    title="Remove from saved items"
+                  >
+                    X
+                  </button>
+                </li>
+              </ul>
             </div>
+          </div>
 
-            <!-- Recently Viewed Items -->
-            <div class="recently-viewed-section">
-              <h2 class="text-center mt-4" @click="toggleRecentlyViewed">
-                Recently Viewed
-                <span class="dropdown-arrow">{{ isRecentlyViewedOpen ? '▲' : '▼' }}</span>
-              </h2>
-              <div v-if="isRecentlyViewedOpen">
-                <div v-if="recentlyViewedItems.length === 0" class="text-center py-4">
-                  <p class="text-muted">You haven't viewed any items yet.</p>
-                </div>
-                <ul v-else class="list-group recently-viewed-list">
-                  <li v-for="item in recentlyViewedItems" :key="item.id" class="list-group-item recently-viewed-item">
-                    <a :href="`/item/${item.id}`" class="recently-viewed-item-link">
-                      <div class="recently-viewed-item-image-container">
-                        <img :src="item.image" alt="Item Icon" class="recently-viewed-item-image" />
-                      </div>
-                      <div class="recently-viewed-item-details">
-                        <div class="recently-viewed-item-name">{{ item.name }}</div>
-                        <small class="recently-viewed-item-category">{{ item.category }}</small>
-                        <small class="recently-viewed-item-date">Viewed: {{ new Date(item.viewedAt).toLocaleDateString() }}</small>
-                      </div>
-                    </a>
-                  </li>
-                </ul>
+          <!-- Recently Viewed Items -->
+          <div class="recently-viewed-section">
+            <h2 @click="toggleRecentlyViewed">
+              Recently Viewed
+              <span class="dropdown-arrow">{{ isRecentlyViewedOpen ? '▲' : '▼' }}</span>
+            </h2>
+            <div v-if="isRecentlyViewedOpen">
+              <div v-if="recentlyViewedItems.length === 0" class="text-center py-4">
+                <p class="text-muted">You haven't viewed any items yet.</p>
               </div>
+              <ul v-else class="list-group recently-viewed-list">
+                <li v-for="item in recentlyViewedItems" :key="item.id" class="recently-viewed-item">
+                  <a :href="`/item/${item.id}`" class="recently-viewed-item-link">
+                    <div class="recently-viewed-item-image-container">
+                      <img :src="item.image" alt="Item Icon" class="recently-viewed-item-image" />
+                    </div>
+                    <div class="recently-viewed-item-details">
+                      <div class="recently-viewed-item-name">{{ item.name }}</div>
+                      <small class="recently-viewed-item-category">{{ formatCategory(item.category) }}</small>
+                      <small class="recently-viewed-item-date">Viewed: {{ new Date(item.viewedAt).toLocaleDateString() }}</small>
+                    </div>
+                  </a>
+                </li>
+              </ul>
             </div>
           </div>
         </div>
-      </aside>
+      </div>
+    </aside>
 
       <!-- Main Content -->
       <!-- Welcome Message -->
@@ -611,5 +619,141 @@
   .upload-number {
     display: block;
     text-align: center;
+  }
+
+  /* Item History Section Styling */
+  .saved-items-section,
+  .recently-viewed-section {
+    margin-bottom: 20px;
+  }
+
+  /* Section Headers with Dropdown Triangles */
+  .saved-items-section h2,
+  .recently-viewed-section h2 {
+    font-size: 1.5rem;
+    cursor: pointer;
+    user-select: none;
+    padding: 10px;
+    margin-bottom: 10px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    border-bottom: 1px solid #dee2e6;
+  }
+
+  .dropdown-arrow {
+    margin-left: 8px;
+    transition: transform 0.3s ease;
+  }
+
+  /* Item Lists */
+  .saved-items-list,
+  .recently-viewed-list {
+    padding: 0;
+    margin: 0;
+  }
+
+  /* Individual Item Styling */
+  .saved-item,
+  .recently-viewed-item {
+    display: flex;
+    align-items: center;
+    padding: 10px;
+    margin-bottom: 5px;
+    border: 1px solid #eee;
+    border-radius: 5px;
+    position: relative;
+    transition: background-color 0.2s;
+  }
+
+  .saved-item:hover,
+  .recently-viewed-item:hover {
+    background-color: #f8f9fa;
+  }
+
+  /* Item Links */
+  .saved-item-link,
+  .recently-viewed-item-link {
+    display: flex;
+    align-items: center;
+    text-decoration: none;
+    color: inherit;
+    flex: 1;
+  }
+
+  /* Item Image Container */
+  .saved-item-image-container,
+  .recently-viewed-item-image-container {
+    width: 40px;
+    height: 40px;
+    margin-right: 12px;
+    flex-shrink: 0;
+  }
+
+  /* Item Images */
+  .saved-item-image,
+  .recently-viewed-item-image {
+    width: 100%;
+    height: 100%;
+    object-fit: contain;
+    border-radius: 4px;
+  }
+
+  /* Item Details */
+  .saved-item-details,
+  .recently-viewed-item-details {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+  }
+
+  /* Item Name */
+  .saved-item-name,
+  .recently-viewed-item-name {
+    font-weight: 600;
+    color: #007bff;
+    margin-bottom: 2px;
+    font-size: 0.9rem;
+  }
+
+  /* Item Category & Date */
+  .saved-item-category,
+  .recently-viewed-item-category,
+  .saved-item-date,
+  .recently-viewed-item-date {
+    display: block;
+    color: #6c757d;
+    font-size: 0.75rem;
+    line-height: 1.2;
+  }
+
+  /* Remove Button for Saved Items */
+  .remove-saved-item-btn {
+    background: none;
+    border: none;
+    color: #dc3545;
+    font-weight: bold;
+    cursor: pointer;
+    font-size: 0.8rem;
+    padding: 5px;
+    margin-left: 5px;
+    border-radius: 3px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 22px;
+    height: 22px;
+  }
+
+  .remove-saved-item-btn:hover {
+    background-color: #dc3545;
+    color: white;
+  }
+
+  /* Empty States */
+  .saved-items-section .text-muted,
+  .recently-viewed-section .text-muted {
+    font-style: italic;
+    color: #adb5bd;
   }
 </style>
