@@ -28,7 +28,7 @@
 
   // Function to load saved items from local storage
   const loadSavedItems = () => {
-    savedItems.value = JSON.parse(localStorage.getItem('savedItems') || []);
+    savedItems.value = JSON.parse(localStorage.getItem('savedItems') || '[]');
   };
 
   // This function will remove an item from saved items
@@ -39,7 +39,7 @@
 
   // Function to load recently viewed items from local storage
   const loadRecentlyViewedItems = () => {
-    recentlyViewedItems.value = JSON.parse(localStorage.getItem('recentlyViewedItems') || []);
+    recentlyViewedItems.value = JSON.parse(localStorage.getItem('recentlyViewedItems') || '[]');
   };
 
   // Function to add an item to recently viewed items
