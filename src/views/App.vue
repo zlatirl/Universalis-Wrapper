@@ -140,7 +140,7 @@
     searchQuery.value = '';
 
     try {
-      const response = await fetch(`https://v2.xivapi.com/api/search?sheets=Item&query=%2BItemSearchCategory.Name%3D%22${categoryName}%22&language=en&limit=100&fields=Name%2CItemSearchCategory.Name%2CIcon`);
+      const response = await fetch(`https://v2.xivapi.com/api/search?sheets=Item&query=%2BItemSearchCategory.Name%3D%22${categoryName}%22&language=en&limit=500&fields=Name%2CItemSearchCategory.Name%2CIcon`);
       const data = await response.json();
       
       if (data.results && Array.isArray(data.results)) {
