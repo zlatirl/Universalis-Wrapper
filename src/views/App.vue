@@ -8,6 +8,7 @@
   import { useNotificationStore } from '../stores/notification';
   import { useMarketWatcher } from '../services/marketWatcher.js';
   import NotificationDropdown from '../components/NotificationDropdown.vue';
+  import AppFooter from '../components/AppFooter.vue';
 
   // Reactive state variables
   const showSettings = ref(false);
@@ -365,6 +366,8 @@
       :selectedServer="selectedServer"
     />
   </main>
+
+  <AppFooter />
 </template>
 
 <style scoped>
