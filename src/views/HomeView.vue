@@ -225,15 +225,26 @@
   const fetchItemNames = async (itemIDs) => {
     try {
       const itemDetailsPromises = itemIDs.map((id) =>
-        axios.get(`https://xivapi.com/item/${id}`)
+        axios.get(`https://v2.xivapi.com/api/sheet/Item/${id}?fields=Name,ItemUICategory,Icon`)
       );
       const responses = await Promise.all(itemDetailsPromises);
-      return responses.map((response) => ({
-        id: response.data.ID,
-        name: response.data.Name,
-        category: response.data.ItemUICategory?.Name || 'Unknown Category',
-        image: `https://xivapi.com${response.data.Icon}`,
-      }));
+      return responses.map((response) => {
+        const data = response.data;
+        
+        // Ensure Icon exists and construct correct image URL
+        let iconPath = "";
+        if (data.fields?.Icon?.path) {
+          const urlParts = data.fields.Icon.path.split("/");
+          iconPath = `https://xivapi.com/i/${urlParts[2]}/${urlParts[3].replace(".tex", ".png")}`;
+        }
+        
+        return {
+          id: data.row_id,
+          name: data.fields.Name,
+          category: data.fields.ItemUICategory?.fields?.Name || 'Unknown Category',
+          image: iconPath,
+        };
+      });
     } catch (error) {
       console.error('Error fetching item names:', error);
       return [];
